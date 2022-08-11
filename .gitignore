@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# vscode
+.vscode
+
+# my stuff
+videos/
