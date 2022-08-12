@@ -5,10 +5,16 @@ CPPFLAGS=-I ../include/
 OBJ=../obj/
 BIN=../bin/
 
+$(BIN)main_sequential.out: $(OBJ)main_sequential.o $(OBJ)rgb2gray.o $(OBJ)smoothing.o
+	$(CXX) $(OBJ)main_sequential.o $(OBJ)rgb2gray.o $(OBJ)smoothing.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)main_sequential.out
+
 $(BIN)seq_smoothing_perf_eval.out: $(OBJ)utimer.o $(OBJ)rgb2gray.o $(OBJ)smoothing.o $(OBJ)seq_smoothing_perf_eval.o
 	$(CXX) $(OBJ)utimer.o $(OBJ)rgb2gray.o $(OBJ)smoothing.o $(OBJ)seq_smoothing_perf_eval.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)seq_smoothing_perf_eval.out
 
-$(OBJ)utimer.o:
+$(OBJ)main_sequential.o: sequential/main_sequential.cpp
+	$(CXX) -c sequential/main_sequential.cpp $(CXXFLAGS) $(CPPFLAGS) -o $(OBJ)main_sequential.o
+
+$(OBJ)utimer.o: auxiliary/utimer.cpp
 	$(CXX) -c auxiliary/utimer.cpp $(CXXFLAGS) $(CPPFLAGS) -o $(OBJ)utimer.o
 
 $(OBJ)rgb2gray.o: sequential/rgb2gray.cpp
