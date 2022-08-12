@@ -1,9 +1,9 @@
 #include <iostream>
 #include "opencv2/opencv.hpp"
 
-#include "../auxiliary/utimer.cpp"
-#include "rgb2gray.cpp"
-#include "smoothing.cpp"
+#include "auxiliary/utimer.hpp"
+#include "sequential/rgb2gray.hpp"
+#include "sequential/smoothing.hpp"
 
 
 using namespace std;
@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    int n_attempts = 20;
+    int n_attempts = 1;
     vector<long> clean_code_attempts(n_attempts), efficient_attempts(n_attempts);
     for (int t = 0; t < n_attempts; t++){
         cout << "Attempt " << t + 1 << " / " << n_attempts << endl;

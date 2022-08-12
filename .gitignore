@@ -36,4 +36,5 @@
 
 # my stuff
 videos/
-*.out
+obj/
+bin/

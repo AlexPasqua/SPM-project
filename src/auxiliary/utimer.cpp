@@ -1,26 +1,18 @@
 #include <iostream>
 #include <chrono>
 
-/**
- * @brief object that takes the time upon creation and, once destroyed, prints
- * the elapsed time from its creation
- */
-class utimer {
-private:
-    std::chrono::system_clock::time_point start;
-    std::chrono::system_clock::time_point stop;
-    long elapsed;
-    const std::string msg;
+#include "auxiliary/utimer.hpp"
 
-public:
-    utimer(const std::string msg) : msg(msg) {
-        start = std::chrono::system_clock::now();
-    }
 
-    ~utimer() {
-        stop = std::chrono::system_clock::now();
-        std::chrono::duration<double> elapsed = stop - start;
-        long musec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-        std::cout << msg << " computed in: " << musec << " micro-seconds" << std::endl;
-    }
-};
+// constructor of class utimer
+utimer::utimer(const std::string msg) : msg(msg) {
+    start = std::chrono::system_clock::now();
+}
+
+// destructor of class utimer
+utimer::~utimer() {
+    stop = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed = stop - start;
+    long musec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+    std::cout << msg << " computed in: " << musec << " micro-seconds" << std::endl;
+}

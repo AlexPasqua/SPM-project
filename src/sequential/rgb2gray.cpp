@@ -1,4 +1,5 @@
 #include "opencv2/opencv.hpp"
+#include "sequential/rgb2gray.hpp"
 
 
 using namespace cv;
