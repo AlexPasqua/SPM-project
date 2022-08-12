@@ -1,11 +1,15 @@
 #include <iostream>
 #include <chrono>
 
-
+/**
+ * @brief object that takes the time upon creation and, once destroyed, prints
+ * the elapsed time from its creation
+ */
 class utimer {
 private:
     std::chrono::system_clock::time_point start;
     std::chrono::system_clock::time_point stop;
+    long elapsed;
     const std::string msg;
 
 public:
@@ -16,7 +20,7 @@ public:
     ~utimer() {
         stop = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed = stop - start;
-        auto musec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+        long musec = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
         std::cout << msg << " computed in: " << musec << " micro-seconds" << std::endl;
     }
 };
