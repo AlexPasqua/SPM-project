@@ -11,6 +11,8 @@ $(BIN)main_sequential.out: $(OBJ)main_sequential.o $(OBJ)rgb2gray.o $(OBJ)smooth
 $(BIN)seq_smoothing_perf_eval.out: $(OBJ)utimer.o $(OBJ)rgb2gray.o $(OBJ)smoothing.o $(OBJ)seq_smoothing_perf_eval.o
 	$(CXX) $(OBJ)utimer.o $(OBJ)rgb2gray.o $(OBJ)smoothing.o $(OBJ)seq_smoothing_perf_eval.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)seq_smoothing_perf_eval.out
 
+all: $(BIN)main_sequential.out $(BIN)seq_smoothing_perf_eval.out
+
 $(OBJ)main_sequential.o: sequential/main_sequential.cpp
 	$(CXX) -c sequential/main_sequential.cpp $(CXXFLAGS) $(CPPFLAGS) -o $(OBJ)main_sequential.o
 

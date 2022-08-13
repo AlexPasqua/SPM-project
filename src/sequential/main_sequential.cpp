@@ -22,12 +22,14 @@ int main(int argc, char** argv) {
     cap >> background_rgb;
     
     // convert background image to gray scale and smooth it
-    Mat gray_background = rgb2gray(background_rgb);
-    Mat smooth_gray_background = smooth_efficient(gray_background);
+    Mat *gray_background = rgb2gray(&background_rgb, nullptr);
+    Mat *smooth_gray_background = smooth_efficient(gray_background, nullptr);
 
     int rows = background_rgb.rows;
     int cols = background_rgb.cols;
 
+    Mat *frame_gray = new Mat(rows, cols, CV_8UC1);
+    Mat *frame = new Mat(rows, cols, CV_8UC1);
     while (true) {
         Mat frame_rgb;
         cap >> frame_rgb;
@@ -35,9 +37,14 @@ int main(int argc, char** argv) {
             break;
         
         // frame to grayscale
-        Mat frame_gray = rgb2gray(frame_rgb);
+        frame_gray = rgb2gray(&frame_rgb, frame_gray);
 
         // smooth the grayscale frame
-        Mat frame = smooth_efficient(frame_gray);
+        frame = smooth_efficient(frame_gray, frame);
     }
+
+    // free the memory
+    delete gray_background, smooth_gray_background, frame_gray, frame;
+
+    return 0;
 }

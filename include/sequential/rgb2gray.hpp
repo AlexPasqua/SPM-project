@@ -3,6 +3,6 @@
 
 #include "opencv2/opencv.hpp"
 
-cv::Mat rgb2gray(cv::Mat rgb_img);
+cv::Mat * rgb2gray(cv::Mat *rgb_img, cv::Mat *gray_img);
 
 #endif

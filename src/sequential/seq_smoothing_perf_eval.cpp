@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    int n_attempts = 1;
+    int n_attempts = 20;
     vector<long> clean_code_attempts(n_attempts), efficient_attempts(n_attempts);
     for (int t = 0; t < n_attempts; t++){
         cout << "Attempt " << t + 1 << " / " << n_attempts << endl;
@@ -29,8 +29,8 @@ int main(int argc, char** argv) {
         cap >> background_rgb;
         
         // convert background image to gray scale and smooth it
-        Mat gray_background = rgb2gray(background_rgb);
-        Mat smooth_gray_background = smooth_efficient(gray_background);
+        Mat *gray_background = rgb2gray(&background_rgb, nullptr);
+        Mat *smooth_gray_background = smooth_efficient(gray_background, nullptr);
 
         int rows = background_rgb.rows;
         int cols = background_rgb.cols;
@@ -39,6 +39,8 @@ int main(int argc, char** argv) {
         long elapsed_musecs;
         vector<long> clean_code, efficient_code;
 
+        Mat *frame_gray = new Mat(rows, cols, CV_8UC1);
+        Mat *frame = new Mat(rows, cols, CV_8UC1);
         while (true) {
             Mat frame_rgb;
             cap >> frame_rgb;
@@ -46,24 +48,26 @@ int main(int argc, char** argv) {
                 break;
             
             // frame to grayscale
-            Mat frame_gray = rgb2gray(frame_rgb);
+            frame_gray = rgb2gray(&frame_rgb, frame_gray);
             
             // smooth frame using 2 alternative functions and measuring performance
             {
                 start = chrono::system_clock::now();
-                Mat frame = smooth_clean_code(frame_gray);
+                frame = smooth_clean_code(frame_gray, frame);
                 end = chrono::system_clock::now();
                 elapsed_musecs = chrono::duration_cast<chrono::microseconds>(end - start).count();
                 clean_code.push_back(elapsed_musecs);
             }
             {
                 start = chrono::system_clock::now();
-                Mat frame = smooth_efficient(frame_gray);
+                frame = smooth_efficient(frame_gray, frame);
                 end = chrono::system_clock::now();
                 elapsed_musecs = chrono::duration_cast<chrono::microseconds>(end - start).count();
                 efficient_code.push_back(elapsed_musecs);
             }
         }
+        // free the memory
+        delete gray_background, smooth_gray_background, frame_gray, frame;
 
         // compute average time for each method for the current attempt
         long sum_clean_code = 0, sum_efficient_code = 0;

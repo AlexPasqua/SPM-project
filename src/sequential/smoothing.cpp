@@ -10,12 +10,14 @@ using namespace cv;
  * Version of the function with the cleanest code
  * 
  * @param gray_img: grayscale image to be smoothed
+ * @param smooth_img: (optional) Mat where to put the result
  * @return the smoothed image
  */
-Mat smooth_clean_code(Mat gray_img) {
-    int rows = gray_img.rows;
-    int cols = gray_img.cols;
-    Mat smooth_img(rows, cols, CV_8UC1);    // matrix where to save the result
+Mat * smooth_clean_code(Mat *gray_img, Mat *smooth_img = nullptr) {
+    int rows = gray_img->rows;
+    int cols = gray_img->cols;
+    if (!smooth_img)
+        smooth_img = new Mat(rows, cols, CV_8UC1);  // matrix where to save the result
 
     int row_lower_offset, row_upper_offset, col_lower_offset, col_upper_offset;
     uchar sum;
@@ -33,9 +35,9 @@ Mat smooth_clean_code(Mat gray_img) {
             sum = 0;
             for (int r = row_lower_offset; r <= row_upper_offset; r++)
                 for (int c = col_lower_offset; c <= col_upper_offset; c++)
-                    sum += gray_img.at<uchar>(i + r, j + c);
+                    sum += gray_img->at<uchar>(i + r, j + c);
             
-            smooth_img.at<uchar>(i, j) = sum / n_neighbors;
+            smooth_img->at<uchar>(i, j) = sum / n_neighbors;
         }
     }
     return smooth_img;
@@ -48,12 +50,14 @@ Mat smooth_clean_code(Mat gray_img) {
  * for the great majority of the pixels.
  * 
  * @param gray_img: grayscale image to be smoothed
+ * @param smooth_img: (optional) Mat where to put the result
  * @return the smoothed image
  */
-Mat smooth_efficient(Mat gray_img) {
-    int rows = gray_img.rows;
-    int cols = gray_img.cols;
-    Mat smooth_img(rows, cols, CV_8UC1);
+Mat * smooth_efficient(Mat *gray_img, Mat *smooth_img = nullptr) {
+    int rows = gray_img->rows;
+    int cols = gray_img->cols;
+    if (!smooth_img)
+        smooth_img = new Mat(rows, cols, CV_8UC1);  // matrix where to save the result
 
     int row_lower_offset, row_upper_offset, col_lower_offset, col_upper_offset;
     uchar sum;
@@ -62,16 +66,16 @@ Mat smooth_efficient(Mat gray_img) {
     // for each pixel NOT on the border of the image
     for (int i = 1; i < rows-1; i++) {
         for (int j = 1; j < cols-1; j++) {
-            smooth_img.at<uchar>(i, j) = (
-                gray_img.at<uchar>(i-1, j-1) +
-                gray_img.at<uchar>(i-1, j) +
-                gray_img.at<uchar>(i-1, j+1) +
-                gray_img.at<uchar>(i, j-1) +
-                gray_img.at<uchar>(i, j) +
-                gray_img.at<uchar>(i, j+1) +
-                gray_img.at<uchar>(i+1, j-1) +
-                gray_img.at<uchar>(i+1, j) +
-                gray_img.at<uchar>(i+1, j+1)
+            smooth_img->at<uchar>(i, j) = (
+                gray_img->at<uchar>(i-1, j-1) +
+                gray_img->at<uchar>(i-1, j) +
+                gray_img->at<uchar>(i-1, j+1) +
+                gray_img->at<uchar>(i, j-1) +
+                gray_img->at<uchar>(i, j) +
+                gray_img->at<uchar>(i, j+1) +
+                gray_img->at<uchar>(i+1, j-1) +
+                gray_img->at<uchar>(i+1, j) +
+                gray_img->at<uchar>(i+1, j+1)
             ) / 9;
         }
     }
@@ -93,9 +97,9 @@ Mat smooth_efficient(Mat gray_img) {
             sum = 0;
             for (int r = row_lower_offset; r <= row_upper_offset; r++)
                 for (int c = col_lower_offset; c <= col_upper_offset; c++)
-                    sum += gray_img.at<uchar>(i + r, j + c);
+                    sum += gray_img->at<uchar>(i + r, j + c);
             
-            smooth_img.at<uchar>(i, j) = sum / n_neighbors;
+            smooth_img->at<uchar>(i, j) = sum / n_neighbors;
         }
     }
     return smooth_img;
