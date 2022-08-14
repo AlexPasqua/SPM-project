@@ -1,7 +1,7 @@
 #include "opencv2/opencv.hpp"
 
-#include "sequential/rgb2gray.hpp"
-#include "sequential/smoothing.hpp"
+#include "auxiliary/utimer.hpp"
+#include "sequential/sequential_funcs.hpp"
 
 
 using namespace std;
@@ -23,15 +23,18 @@ int main(int argc, char** argv) {
     
     // convert background image to gray scale and smooth it
     Mat *gray_background = rgb2gray(&background_rgb, nullptr);
-    Mat *smooth_gray_background = smooth_efficient(gray_background, nullptr);
+    Mat *background = smooth(gray_background, nullptr);
 
     int rows = background_rgb.rows;
     int cols = background_rgb.cols;
-
+    Mat frame_rgb;
     Mat *frame_gray = new Mat(rows, cols, CV_8UC1);
     Mat *frame = new Mat(rows, cols, CV_8UC1);
+    bool motion_detected = false;
+    int n_frame = 1, n_motion_frames = 0;
+    
+    // process all frames one by one
     while (true) {
-        Mat frame_rgb;
         cap >> frame_rgb;
         if (frame_rgb.empty())
             break;
@@ -40,11 +43,20 @@ int main(int argc, char** argv) {
         frame_gray = rgb2gray(&frame_rgb, frame_gray);
 
         // smooth the grayscale frame
-        frame = smooth_efficient(frame_gray, frame);
+        frame = smooth(frame_gray, frame);
+
+        // motion detection
+        if (motion_detect(background, frame, 10, 0.05)) {
+            n_motion_frames++;
+            cout << "Motion detected in frame " << n_frame << endl;
+        }
+        n_frame++;
     }
 
     // free the memory
-    delete gray_background, smooth_gray_background, frame_gray, frame;
+    delete gray_background, background, frame_gray, frame;
 
-    return 0;
+    cout << "Number of frames with detected motion: " << n_motion_frames << endl;
+
+    return n_motion_frames;
 }

@@ -2,8 +2,7 @@
 #include "opencv2/opencv.hpp"
 
 #include "auxiliary/utimer.hpp"
-#include "sequential/rgb2gray.hpp"
-#include "sequential/smoothing.hpp"
+#include "sequential/sequential_funcs.hpp"
 
 
 using namespace std;
@@ -16,7 +15,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    int n_attempts = 20;
+    int n_attempts = 2;
     vector<long> clean_code_attempts(n_attempts), efficient_attempts(n_attempts);
     for (int t = 0; t < n_attempts; t++){
         cout << "Attempt " << t + 1 << " / " << n_attempts << endl;
@@ -30,7 +29,7 @@ int main(int argc, char** argv) {
         
         // convert background image to gray scale and smooth it
         Mat *gray_background = rgb2gray(&background_rgb, nullptr);
-        Mat *smooth_gray_background = smooth_efficient(gray_background, nullptr);
+        Mat *smooth_gray_background = smooth(gray_background, nullptr);
 
         int rows = background_rgb.rows;
         int cols = background_rgb.cols;
@@ -60,7 +59,7 @@ int main(int argc, char** argv) {
             }
             {
                 start = chrono::system_clock::now();
-                frame = smooth_efficient(frame_gray, frame);
+                frame = smooth(frame_gray, frame);
                 end = chrono::system_clock::now();
                 elapsed_musecs = chrono::duration_cast<chrono::microseconds>(end - start).count();
                 efficient_code.push_back(elapsed_musecs);
