@@ -17,16 +17,21 @@ int main(int argc, char** argv) {
     // read video
     VideoCapture cap(argv[1]);
 
+    utimer t("Whole program");
+
     // take background image (i.e. frist frame)
     Mat background_rgb(5, 5, CV_8UC1);
     cap >> background_rgb;
     
-    // convert background image to gray scale and smooth it
-    Mat *gray_background = rgb2gray(&background_rgb, nullptr);
-    Mat *background = smooth(gray_background, nullptr);
-
     int rows = background_rgb.rows;
     int cols = background_rgb.cols;
+    
+    // convert background image to gray scale and smooth it
+    Mat *gray_background = new Mat(rows, cols, CV_8UC1);
+    Mat *background = new Mat(rows, cols, CV_8UC1);
+    rgb2gray(&background_rgb, gray_background);
+    smooth(gray_background, background);
+
     Mat frame_rgb;
     Mat *frame_gray = new Mat(rows, cols, CV_8UC1);
     Mat *frame = new Mat(rows, cols, CV_8UC1);
@@ -40,10 +45,10 @@ int main(int argc, char** argv) {
             break;
         
         // frame to grayscale
-        frame_gray = rgb2gray(&frame_rgb, frame_gray);
+        rgb2gray(&frame_rgb, frame_gray);
 
         // smooth the grayscale frame
-        frame = smooth(frame_gray, frame);
+        smooth(frame_gray, frame);
 
         // motion detection
         if (motion_detect(background, frame, 10, 0.05)) {

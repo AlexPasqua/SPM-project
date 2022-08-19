@@ -10,14 +10,12 @@ using namespace cv;
  * image (cv::Mat with 1 channel)
  * 
  * @param rgb_img cv::Mat with 3 channels (R-G-B)
- * @param gray_img (optional) cv::Mat with 1 channel (grayscale) where to put the result
+ * @param gray_img cv::Mat with 1 channel (grayscale) where to put the result
  * @return grayscale version of 'rgb_img' (a cv::Mat with 1 channel)
  */
-Mat * rgb2gray(Mat *rgb_img, Mat *gray_img = nullptr) {
+void rgb2gray(Mat *rgb_img, Mat *gray_img) {
     int rows = rgb_img->rows;
     int cols = rgb_img->cols;
-    if (!gray_img)
-        gray_img = new Mat(rows, cols, CV_8UC1);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             gray_img->at<uchar>(i, j) = (
@@ -27,7 +25,6 @@ Mat * rgb2gray(Mat *rgb_img, Mat *gray_img = nullptr) {
             ) / 3;
         }
     }
-    return gray_img;
 }
 
 
@@ -36,15 +33,12 @@ Mat * rgb2gray(Mat *rgb_img, Mat *gray_img = nullptr) {
  * Version of the function with the cleanest code
  * 
  * @param gray_img: grayscale image to be smoothed
- * @param smooth_img: (optional) Mat where to put the result
+ * @param smooth_img: Mat where to put the result
  * @return the smoothed image
  */
-Mat * smooth_clean_code(Mat *gray_img, Mat *smooth_img = nullptr) {
+void smooth_clean_code(Mat *gray_img, Mat *smooth_img) {
     int rows = gray_img->rows;
     int cols = gray_img->cols;
-    if (!smooth_img)
-        smooth_img = new Mat(rows, cols, CV_8UC1);  // matrix where to save the result
-
     int row_lower_offset, row_upper_offset, col_lower_offset, col_upper_offset;
     uchar sum;
     uint8_t n_neighbors;    // number of neighboring pixels (including central one)
@@ -66,7 +60,6 @@ Mat * smooth_clean_code(Mat *gray_img, Mat *smooth_img = nullptr) {
             smooth_img->at<uchar>(i, j) = sum / n_neighbors;
         }
     }
-    return smooth_img;
 }
 
 
@@ -76,15 +69,12 @@ Mat * smooth_clean_code(Mat *gray_img, Mat *smooth_img = nullptr) {
  * for the great majority of the pixels.
  * 
  * @param gray_img: grayscale image to be smoothed
- * @param smooth_img: (optional) Mat where to put the result
+ * @param smooth_img: Mat where to put the result
  * @return the smoothed image
  */
-Mat * smooth(Mat *gray_img, Mat *smooth_img = nullptr) {
+void smooth(Mat *gray_img, Mat *smooth_img) {
     int rows = gray_img->rows;
     int cols = gray_img->cols;
-    if (!smooth_img)
-        smooth_img = new Mat(rows, cols, CV_8UC1);  // matrix where to save the result
-
     int row_lower_offset, row_upper_offset, col_lower_offset, col_upper_offset;
     uchar sum;
     uint8_t n_neighbors;    // number of neighboring pixels (including central one)
@@ -128,7 +118,6 @@ Mat * smooth(Mat *gray_img, Mat *smooth_img = nullptr) {
             smooth_img->at<uchar>(i, j) = sum / n_neighbors;
         }
     }
-    return smooth_img;
 }
 
 
