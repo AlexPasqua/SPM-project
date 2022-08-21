@@ -8,6 +8,7 @@
  * @brief object that takes the time upon creation and, once destroyed, prints
  * the elapsed time from its creation
  */
+template <typename T>
 class utimer {
 private:
     std::chrono::system_clock::time_point start;

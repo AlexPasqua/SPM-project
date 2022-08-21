@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
         VideoCapture cap(argv[1]);
 
         // take background image (i.e. frist frame)
-        Mat background_rgb(5, 5, CV_8UC1);
+        Mat background_rgb;
         cap >> background_rgb;
         
         int rows = background_rgb.rows;
