@@ -60,6 +60,7 @@ int main(int argc, char** argv) {
 
     // free the memory
     delete gray_background, background, frame_gray, frame;
+    cap.release();
 
     cout << "Number of frames with detected motion: " << n_motion_frames << endl;
 
