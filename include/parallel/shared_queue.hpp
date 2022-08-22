@@ -1,3 +1,6 @@
+#ifndef SHARED_QUEUE_HPP
+#define SHARED_QUEUE_HPP
+
 #include <mutex>
 #include <queue>
 #include <condition_variable>
@@ -16,3 +19,5 @@ public:
     void push(T frame);
     T pop();
 };
+
+#endif

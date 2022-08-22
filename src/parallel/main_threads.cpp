@@ -3,7 +3,7 @@
 #include "opencv2/opencv.hpp"
 
 #include "parallel/parallel_funcs.hpp"
-#include "../parallel/shared_queue.cpp"
+#include "shared_queue.cpp"
 #include "../auxiliary/timer.cpp"
 
 
@@ -26,13 +26,15 @@ int main(int argc, char** argv) {
     Mat background_rgb;
     cap >> background_rgb;
 
+    // shared queue for frames
+    shared_queue<std::shared_ptr<Mat>> q;
+
     // start threads
     std::vector<std::thread> threads;
     for (unsigned i = 0; i < atoi(argv[2]); i++)
-        threads.push_back(std::thread(main_comp, 4));
+        threads.push_back(std::thread(pick_and_comp, &q));
 
     // put frames in the queue for elaboration
-    shared_queue<std::shared_ptr<Mat>> q;
     Mat frame_rgb;
     while (true) {
         cap >> frame_rgb;
