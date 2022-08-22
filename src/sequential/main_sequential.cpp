@@ -15,10 +15,11 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    // timer for the overall completion time
+    timer<std::chrono::seconds> t("Overall completion time");
+
     // read video
     VideoCapture cap(argv[1]);
-
-    timer<std::chrono::seconds> t("Overall completion time");
 
     // take background image (i.e. frist frame)
     Mat background_rgb;

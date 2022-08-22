@@ -6,9 +6,8 @@
 
 // constructor of class timer
 template <typename T>
-timer<T>::timer(const std::string msg) : msg(msg) {
-    start = std::chrono::system_clock::now();
-}
+timer<T>::timer(const std::string msg) :
+    msg(msg), start(std::chrono::system_clock::now()) {}
 
 // destructor of class timer
 template <typename T>
