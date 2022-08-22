@@ -3,7 +3,7 @@
 #include "opencv2/opencv.hpp"
 
 #include "parallel/parallel_funcs.hpp"
-#include "../auxiliary/utimer.cpp"
+#include "../auxiliary/timer.cpp"
 
 
 using namespace std;
@@ -15,8 +15,8 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    // utimer to print the overall completion time at the end of the program
-    utimer<std::chrono::milliseconds> tc("Overall completion time");
+    // timer to print the overall completion time at the end of the program
+    timer<std::chrono::milliseconds> tc("Overall completion time");
 
     // read video
     VideoCapture cap(argv[1]);

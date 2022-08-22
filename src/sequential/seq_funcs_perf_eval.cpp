@@ -3,7 +3,7 @@
 #include <cmath>
 #include "opencv2/opencv.hpp"
 
-#include "auxiliary/utimer.hpp"
+#include "auxiliary/timer.hpp"
 #include "sequential/sequential_funcs.hpp"
 
 

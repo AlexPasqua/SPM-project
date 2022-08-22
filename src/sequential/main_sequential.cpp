@@ -1,7 +1,7 @@
 #include <iostream>
 #include "opencv2/opencv.hpp"
 
-#include "../auxiliary/utimer.cpp"
+#include "../auxiliary/timer.cpp"
 #include "sequential/sequential_funcs.hpp"
 
 
@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
     // read video
     VideoCapture cap(argv[1]);
 
-    utimer<std::chrono::seconds> t("Overall completion time");
+    timer<std::chrono::seconds> t("Overall completion time");
 
     // take background image (i.e. frist frame)
     Mat background_rgb;

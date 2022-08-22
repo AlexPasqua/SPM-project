@@ -1,18 +1,18 @@
 #include <iostream>
 #include <chrono>
 
-#include "auxiliary/utimer.hpp"
+#include "auxiliary/timer.hpp"
 
 
-// constructor of class utimer
+// constructor of class timer
 template <typename T>
-utimer<T>::utimer(const std::string msg) : msg(msg) {
+timer<T>::timer(const std::string msg) : msg(msg) {
     start = std::chrono::system_clock::now();
 }
 
-// destructor of class utimer
+// destructor of class timer
 template <typename T>
-utimer<T>::~utimer() {
+timer<T>::~timer() {
     stop = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed = stop - start;
     long casted_elapsed = std::chrono::duration_cast<T>(elapsed).count();

@@ -1,5 +1,5 @@
-#ifndef UTIMER_HPP
-#define UTIMER_HPP
+#ifndef TIMER_HPP
+#define TIMER_HPP
 
 #include <iostream>
 #include <chrono>
@@ -9,7 +9,7 @@
  * the elapsed time from its creation
  */
 template <typename T>
-class utimer {
+class timer {
 private:
     std::chrono::system_clock::time_point start;
     std::chrono::system_clock::time_point stop;
@@ -17,8 +17,8 @@ private:
     const std::string msg;
 
 public:
-    utimer(const std::string msg);
-    ~utimer();
+    timer(const std::string msg);
+    ~timer();
 };
 
 #endif
