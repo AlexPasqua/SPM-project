@@ -5,8 +5,8 @@ CPPFLAGS=-I ../include/
 OBJ=../obj/
 BIN=../bin/
 
-$(BIN)main_threads.out: $(OBJ)main_threads.o $(OBJ)parallel_funcs.o $(OBJ)shared_queue.o $(OBJ)timer.o
-	$(CXX) $(OBJ)main_threads.o $(OBJ)parallel_funcs.o $(OBJ)shared_queue.o $(OBJ)timer.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)main_threads.out
+$(BIN)main_threads.out: $(OBJ)main_threads.o $(OBJ)parallel_funcs.o $(OBJ)sequential_funcs.o $(OBJ)shared_queue.o $(OBJ)timer.o
+	$(CXX) $(OBJ)main_threads.o $(OBJ)parallel_funcs.o $(OBJ)sequential_funcs.o $(OBJ)shared_queue.o $(OBJ)timer.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)main_threads.out
 
 $(BIN)main_sequential.out: $(OBJ)main_sequential.o $(OBJ)sequential_funcs.o $(OBJ)timer.o
 	$(CXX) $(OBJ)main_sequential.o $(OBJ)sequential_funcs.o $(OBJ)timer.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)main_sequential.out
