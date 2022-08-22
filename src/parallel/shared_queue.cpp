@@ -1,3 +1,4 @@
+#include <iostream>
 #include "parallel/shared_queue.hpp"
 
 
@@ -36,16 +37,33 @@ void shared_queue<T>::push(T frame) {
  * @return the pointer to the frame popped from the queue
  */
 template<typename T>
-T shared_queue<T>::pop() {
+T shared_queue<T>::pop(bool *finished) {
     std::unique_lock<std::mutex> lk(m);
     
     // cond_var.wait(exit_mutex, [this](){ return !q.empty(); });
-    
-    while (q.empty()) {
+
+    while (!(q.empty() && *finished)) {
+        std::cout << "IN POP: " << this->q.empty() << " " << *finished << std::endl;
         cond_var.wait(lk);
     }
     
-    T frame = q.front();
-    q.pop();
-    return frame;
+    if (!q.empty()) {
+        T frame = q.front();
+        q.pop();
+        return frame;
+    }
+    return nullptr;
+}
+
+
+template<typename T>
+size_t shared_queue<T>::size() {
+    std::lock_guard<std::mutex> lk(m);
+    return q.size();
+}
+
+template<typename T>
+bool shared_queue<T>::empty() {
+    std::lock_guard<std::mutex> lk(m);
+    return q.empty();
 }

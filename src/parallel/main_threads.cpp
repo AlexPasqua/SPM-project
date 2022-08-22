@@ -36,21 +36,28 @@ int main(int argc, char** argv) {
     // shared queue for frames
     shared_queue<std::shared_ptr<cv::Mat>> q;
 
-    // variable to store the result
+    // atomic variable to store the result
     std::atomic<int> n_motion_frames(0);
+
+    // atmoic variable to signal that the video is finished
+    bool finished = false;
 
     // start threads
     std::vector<std::thread> threads;
     for (unsigned i = 0; i < atoi(argv[2]); i++)
-        threads.push_back(std::thread(pick_and_comp, &q, &background, 0, 0.0,
+        threads.push_back(std::thread(pick_and_comp, &q, &finished,
+                                      &background, 0, 0.0,
                                       std::ref(n_motion_frames)));
 
     // put frames in the queue for elaboration
     cv::Mat frame_rgb;
     while (true) {
         cap >> frame_rgb;
-        if (frame_rgb.empty())
+        if (frame_rgb.empty()) {
+            cout << "Video finished" << endl;
+            finished = true;
             break;
+        }
         q.push(std::make_shared<cv::Mat>(frame_rgb));
     }
 

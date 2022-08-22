@@ -4,6 +4,7 @@
 #include <mutex>
 #include <queue>
 #include <condition_variable>
+#include <atomic>
 
 
 template<typename T>
@@ -17,7 +18,9 @@ public:
     shared_queue();
     ~shared_queue();
     void push(T frame);
-    T pop();
+    T pop(bool *finished);
+    size_t size();
+    bool empty();
 };
 
 #endif
