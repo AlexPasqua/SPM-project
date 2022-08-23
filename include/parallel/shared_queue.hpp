@@ -11,14 +11,15 @@ template<typename T>
 class shared_queue {
 private:
     std::mutex m;
-    std::condition_variable cond_var;
     std::queue<T> q;
 
 public:
+    std::condition_variable cond_var;
+    std::atomic<bool> finished;
     shared_queue();
     ~shared_queue();
     void push(T frame);
-    T pop(bool *finished);
+    T pop();
     size_t size();
     bool empty();
 };

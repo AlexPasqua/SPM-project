@@ -7,22 +7,22 @@
 #include "shared_queue.cpp" //cpp because we need implementation of methods
 
 
-void pick_and_comp(shared_queue<std::shared_ptr<cv::Mat>> *q,
-                   bool *finished, cv::Mat *background,
-                   int min_diff, float perc, std::atomic<int>& n_motion_frames) {
+void pick_and_comp(shared_queue<std::shared_ptr<cv::Mat>> *q, const int th_num,
+                   cv::Mat *background, int min_diff, float perc,
+                   std::atomic<int>& n_motion_frames) {
     int rows = background->rows;
     int cols = background->cols;
     cv::Mat frame_gray(rows, cols, CV_8UC1);
     cv::Mat frame(rows, cols, CV_8UC1);
-    while (!(q->empty() && *finished)) {
-        std::cout << q->empty() << " " << *finished << std::endl;
-        std::shared_ptr<cv::Mat> frame_rgb = q->pop(finished);  // wait included in pop()
-        if (frame_rgb == nullptr)
-            continue;
+    
+    while (!(q->empty() && q->finished)) {
+        std::shared_ptr<cv::Mat> frame_rgb = q->pop();  // wait included in pop()
+        if (frame_rgb == nullptr)   // empty queue and finished
+            break;
         main_comp(background, frame_rgb.get(), &frame_gray, &frame, min_diff,
                   perc, n_motion_frames);
     }
-    std::cout << "Thread finished" << std::endl;
+    std::cout << "Thread " << th_num << " finished" << std::endl;
 }
 
 

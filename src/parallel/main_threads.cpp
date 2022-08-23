@@ -39,14 +39,10 @@ int main(int argc, char** argv) {
     // atomic variable to store the result
     std::atomic<int> n_motion_frames(0);
 
-    // atmoic variable to signal that the video is finished
-    bool finished = false;
-
     // start threads
     std::vector<std::thread> threads;
     for (unsigned i = 0; i < atoi(argv[2]); i++)
-        threads.push_back(std::thread(pick_and_comp, &q, &finished,
-                                      &background, 0, 0.0,
+        threads.push_back(std::thread(pick_and_comp, &q, i, &background, 0, 0.0,
                                       std::ref(n_motion_frames)));
 
     // put frames in the queue for elaboration
@@ -54,8 +50,9 @@ int main(int argc, char** argv) {
     while (true) {
         cap >> frame_rgb;
         if (frame_rgb.empty()) {
-            cout << "Video finished" << endl;
-            finished = true;
+            q.finished = true;
+            q.cond_var.notify_all();
+            cout << "Finished pushing frames" << endl;
             break;
         }
         q.push(std::make_shared<cv::Mat>(frame_rgb));
@@ -68,6 +65,5 @@ int main(int argc, char** argv) {
     
     // print number of motion frames
     cout << "Number of motion frames: " << n_motion_frames << endl;
-
     return 0;
 }

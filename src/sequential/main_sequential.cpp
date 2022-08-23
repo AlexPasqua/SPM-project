@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
     }
 
     // timer for the overall completion time
-    timer<std::chrono::seconds> t("Overall completion time");
+    timer<std::chrono::milliseconds> t("Overall completion time");
 
     // read video
     VideoCapture cap(argv[1]);
@@ -42,6 +42,8 @@ int main(int argc, char** argv) {
     
     // process all frames one by one
     while (true) {
+        timer<chrono::microseconds> t("frame");
+
         cap >> frame_rgb;
         if (frame_rgb.empty())
             break;
@@ -55,7 +57,7 @@ int main(int argc, char** argv) {
         // motion detection
         if (motion_detect(background, frame, 10, 0.05)) {
             n_motion_frames++;
-            cout << "Motion detected in frame " << n_frame << endl;
+            // cout << "Motion detected in frame " << n_frame << endl;
         }
         n_frame++;
     }
