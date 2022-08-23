@@ -43,7 +43,7 @@ T shared_queue<T>::pop() {
     
     // cond_var.wait(exit_mutex, [this](){ return !q.empty(); });
 
-    while (q.empty() && !this->finished) {
+    while (q.empty() && !finished) {
         cond_var.wait(lk);
     }
     
@@ -78,4 +78,19 @@ template<typename T>
 bool shared_queue<T>::empty() {
     std::lock_guard<std::mutex> lk(m);
     return q.empty();
+}
+
+
+// getter for finished
+template<typename T>
+bool shared_queue<T>::get_finished() {
+    return finished;    // atomic
+}
+
+
+// set finished to true and notifies all waiting threads
+template<typename T>
+void shared_queue<T>::no_more_pushes() {
+    finished = true;    // atomic
+    cond_var.notify_all();
 }

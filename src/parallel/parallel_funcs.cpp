@@ -15,7 +15,7 @@ void pick_and_comp(shared_queue<std::shared_ptr<cv::Mat>> *q, const int th_num,
     cv::Mat frame_gray(rows, cols, CV_8UC1);
     cv::Mat frame(rows, cols, CV_8UC1);
     
-    while (!(q->empty() && q->finished)) {
+    while (!(q->empty() && q->get_finished())) {
         std::shared_ptr<cv::Mat> frame_rgb = q->pop();  // wait included in pop()
         if (frame_rgb == nullptr)   // empty queue and finished
             break;

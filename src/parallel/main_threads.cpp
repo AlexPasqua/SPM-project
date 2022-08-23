@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 
     // start threads
     std::vector<std::thread> threads;
-    for (unsigned i = 0; i < atoi(argv[2]); i++)
+    for (int i = 0; i < atoi(argv[2]); i++)
         threads.push_back(std::thread(pick_and_comp, &q, i, &background, 0, 0.0,
                                       std::ref(n_motion_frames)));
 
@@ -49,14 +49,12 @@ int main(int argc, char** argv) {
     cv::Mat frame_rgb;
     while (true) {
         cap >> frame_rgb;
-        if (frame_rgb.empty()) {
-            q.finished = true;
-            q.cond_var.notify_all();
-            cout << "Finished pushing frames" << endl;
+        if (frame_rgb.empty())
             break;
-        }
         q.push(std::make_shared<cv::Mat>(frame_rgb));
     }
+    q.no_more_pushes();
+    cout << "Finished pushing frames" << endl;
 
     // join threads
     for (auto& t : threads)
@@ -64,6 +62,6 @@ int main(int argc, char** argv) {
             t.join();
     
     // print number of motion frames
-    cout << "Number of motion frames: " << n_motion_frames << endl;
+    cout << "Number of frames with detected motion: " << n_motion_frames << endl;
     return 0;
 }
