@@ -1,7 +1,7 @@
 #include <iostream>
 #include "opencv2/opencv.hpp"
 
-#include "../auxiliary/timer.cpp"
+#include "auxiliary/timer.hpp"
 #include "sequential/sequential_funcs.hpp"
 
 
@@ -42,8 +42,6 @@ int main(int argc, char** argv) {
     
     // process all frames one by one
     while (true) {
-        timer<chrono::microseconds> t("frame");
-
         cap >> frame_rgb;
         if (frame_rgb.empty())
             break;

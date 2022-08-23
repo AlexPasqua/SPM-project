@@ -5,8 +5,8 @@
 
 #include "parallel/parallel_funcs.hpp"
 #include "sequential/sequential_funcs.hpp"
-#include "shared_queue.cpp"
-#include "../auxiliary/timer.cpp"
+#include "parallel/shared_queue.hpp"
+#include "auxiliary/timer.hpp"
 
 
 using namespace std;

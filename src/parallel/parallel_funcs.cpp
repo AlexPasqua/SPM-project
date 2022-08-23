@@ -4,7 +4,7 @@
 
 #include "parallel/parallel_funcs.hpp"
 #include "sequential/sequential_funcs.hpp"
-#include "shared_queue.cpp" //cpp because we need implementation of methods
+#include "parallel/shared_queue.hpp"
 
 
 void pick_and_comp(shared_queue<std::shared_ptr<cv::Mat>> *q, const int th_num,
