@@ -51,11 +51,7 @@ public:
     T pop() {
         std::unique_lock<std::mutex> lk(m);
         
-        // cond_var.wait(exit_mutex, [this](){ return !q.empty(); });
-
-        while (q.empty() && !finished) {
-            cond_var.wait(lk);
-        }
+        cond_var.wait(lk, [this](){ return !q.empty() || finished; });
         
         if (!q.empty()) {   // q can be empty if finished is true
             T frame = q.front();
