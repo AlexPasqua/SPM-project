@@ -8,12 +8,24 @@
 using namespace std;
 using namespace cv;
 
+// prints the usage of the program in case the arguments are wrong
+void print_usage(string prog_name) {
+    cout << "Usage: " << prog_name << " <video_path> "
+         << "[<n workers rgb2gray>] [<n workers smoothing] "
+         << "[<n workers motion_detect>]" << endl;
+    cout << "Arguments in square brackets are optional." << endl;
+    cout << "Default values are 1 for each argument." << endl;
+}
+
 int main(int argc, char** argv) {
-    // check number of CLI arguments
-    if (argc != 2) {
-        std::cout << "Usage: " << argv[0] << " <video_path>" << endl;
+    // check CLI arguments
+    if (argc < 2 || argc > 5) {
+        print_usage(argv[0]);
         return -1;
     }
+    int nw_rgb2gray = argc > 2 && atoi(argv[2]) > 0 ? atoi(argv[2]) : 1;
+    int nw_smooth = argc > 3 && atoi(argv[3]) > 0 ? atoi(argv[3]) : 1;
+    int nw_motion_detect = argc > 4 && atoi(argv[4]) > 0 ? atoi(argv[4]) : 1;
 
     // timer for the overall completion time
     timer<std::chrono::milliseconds> t("Overall completion time");
@@ -31,8 +43,8 @@ int main(int argc, char** argv) {
     // convert background image to gray scale and smooth it
     Mat *gray_background = new Mat(rows, cols, CV_8UC1);
     Mat *background = new Mat(rows, cols, CV_8UC1);
-    rgb2gray(&background_rgb, gray_background);
-    smooth(gray_background, background);
+    rgb2gray(&background_rgb, gray_background, nw_rgb2gray);
+    smooth(gray_background, background, nw_smooth);
 
     Mat frame_rgb;
     Mat *frame_gray = new Mat(rows, cols, CV_8UC1);
@@ -47,13 +59,13 @@ int main(int argc, char** argv) {
             break;
         
         // frame to grayscale
-        rgb2gray(&frame_rgb, frame_gray);
+        rgb2gray(&frame_rgb, frame_gray, nw_rgb2gray);
 
         // smooth the grayscale frame
-        smooth(frame_gray, frame);
+        smooth(frame_gray, frame, nw_smooth);
 
         // motion detection
-        if (motion_detect(background, frame, 10, 0.05)) {
+        if (motion_detect(background, frame, 10, 0.05, nw_motion_detect)) {
             n_motion_frames++;
             // cout << "Motion detected in frame " << n_frame << endl;
         }

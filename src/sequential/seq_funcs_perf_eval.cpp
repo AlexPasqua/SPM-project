@@ -10,13 +10,24 @@
 using namespace std;
 using namespace cv;
 
+// prints the usage of the program in case the arguments are wrong
+void print_usage(string prog_name) {
+    cout << "Usage: " << prog_name << " <video_path> " << "<number of attempts >"
+         << "[<n workers rgb2gray>] [<n workers smoothing] "
+         << "[<n workers motion_detect>]" << endl;
+    cout << "Arguments in square brackets are optional." << endl;
+    cout << "Default values are 1 for each argument." << endl;
+}
+
 int main(int argc, char** argv) {
     // check number of CLI arguments
-    if (argc != 3) {
-        std::cout << "Usage: " << argv[0] << " <video_path>"
-                  << "<number of attempts>" << endl;
+    if (argc < 3 || argc > 6) {
+        print_usage(argv[0]);
         return -1;
     }
+    int nw_rgb2gray = argc > 3 && atoi(argv[3]) > 0 ? atoi(argv[3]) : 1;
+    int nw_smooth = argc > 4 && atoi(argv[4]) > 0 ? atoi(argv[4]) : 1;
+    int nw_motion_detect = argc > 5 && atoi(argv[5]) > 0 ? atoi(argv[5]) : 1;
 
     int n_attempts = std::atoi(argv[2]);
     vector<double> rgb2gray_attempts(n_attempts);
@@ -39,11 +50,11 @@ int main(int argc, char** argv) {
         // convert background image to gray scale and smooth it
         Mat *gray_background = new Mat(rows, cols, CV_8UC1);
         Mat *background = new Mat(rows, cols, CV_8UC1);
-        rgb2gray(&background_rgb, gray_background);
-        smooth(gray_background, background);
+        rgb2gray(&background_rgb, gray_background, nw_rgb2gray);
+        smooth(gray_background, background, nw_smooth);
 
         // variables for performance evaluation
-        chrono::system_clock::time_point start, end;
+        chrono::system_clock::time_point start, stop;
         long elapsed_musecs;
         vector<long> t_rgb2gray, t_smooth_clean_code, t_smooth_efficient, t_motion_detect;
 
@@ -58,33 +69,34 @@ int main(int argc, char** argv) {
             cap >> frame_rgb;
             if (frame_rgb.empty())
                 break;
-            
+
             // measure latency of conversion from RGB to grayscale
             start = chrono::system_clock::now();
-            rgb2gray(&frame_rgb, frame_gray);
-            end = chrono::system_clock::now();
-            elapsed_musecs = chrono::duration_cast<chrono::microseconds>(end - start).count();
+            rgb2gray(&frame_rgb, frame_gray, nw_rgb2gray);
+            stop = chrono::system_clock::now();
+            elapsed_musecs = chrono::duration_cast<chrono::microseconds>(stop - start).count();
             t_rgb2gray.push_back(elapsed_musecs);
             
             // measure latency of smoothing with function with cleaner code
             start = chrono::system_clock::now();
-            smooth_clean_code(frame_gray, frame);
-            end = chrono::system_clock::now();
-            elapsed_musecs = chrono::duration_cast<chrono::microseconds>(end - start).count();
+            // smooth_clean_code(frame_gray, frame);
+            stop = chrono::system_clock::now();
+            elapsed_musecs = chrono::duration_cast<chrono::microseconds>(stop - start).count();
             t_smooth_clean_code.push_back(elapsed_musecs);
 
             // measure latency of smoothing with function with more efficient code
             start = chrono::system_clock::now();
-            smooth(frame_gray, frame);
-            end = chrono::system_clock::now();
-            elapsed_musecs = chrono::duration_cast<chrono::microseconds>(end - start).count();
+            smooth(frame_gray, frame, nw_smooth);
+            stop = chrono::system_clock::now();
+            elapsed_musecs = chrono::duration_cast<chrono::microseconds>(stop - start).count();
             t_smooth_efficient.push_back(elapsed_musecs);
 
             // measure latency of motion detection
             start = chrono::system_clock::now();
-            if (motion_detect(background, frame, 10, 0.05)) {n_motion_frames++;}
-            end = chrono::system_clock::now();
-            elapsed_musecs = chrono::duration_cast<chrono::microseconds>(end - start).count();
+            if (motion_detect(background, frame, 10, 0.05, nw_motion_detect))
+                n_motion_frames++;
+            stop = chrono::system_clock::now();
+            elapsed_musecs = chrono::duration_cast<chrono::microseconds>(stop - start).count();
             t_motion_detect.push_back(elapsed_musecs);
         }
         // free the memory
@@ -115,6 +127,9 @@ int main(int argc, char** argv) {
         cout << "\tSmoothing (clean code): " << cur_avg_smooth_clean_code << " microseconds" << endl;
         cout << "\tSmoothing (efficient code): " << cur_avg_smooth_efficient << " microseconds" << endl;
         cout << "\tMotion detection: " << cur_avg_motion_detect << " microseconds" << endl;
+        cout << "\tSum of the 3 stages (w/ efficient smoothing): "
+             << cur_avg_rgb2gray + cur_avg_smooth_efficient  + cur_avg_motion_detect
+             << " microseconds" << endl;
         cout << endl;
     }
 
@@ -139,6 +154,9 @@ int main(int argc, char** argv) {
     cout << "Smoothing (clean code):\t\t" << avg_smooth_clean_code << " microseconds" << endl;
     cout << "Smoothing (efficient code):\t" << avg_smooth_efficient << " microseconds"<< endl;
     cout << "Motion detection:\t\t" << avg_motion_detect << " microseconds" << endl;
+    cout << "Sum of the 3 stages (w/ efficient smoothing): "
+         << avg_rgb2gray + avg_smooth_efficient  + avg_motion_detect
+         << " microseconds" << endl;
 
     return 0;
 }

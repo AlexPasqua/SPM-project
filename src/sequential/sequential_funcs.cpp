@@ -11,11 +11,13 @@ using namespace cv;
  * 
  * @param rgb_img cv::Mat with 3 channels (R-G-B)
  * @param gray_img cv::Mat with 1 channel (grayscale) where to put the result
+ * @param nw number of threads to use (if 1, sequential version)
  * @return grayscale version of 'rgb_img' (a cv::Mat with 1 channel)
  */
-void rgb2gray(Mat *rgb_img, Mat *gray_img) {
+void rgb2gray(Mat *rgb_img, Mat *gray_img, int nw) {
     int rows = rgb_img->rows;
     int cols = rgb_img->cols;
+    #pragma omp parallel for num_threads(nw)
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             gray_img->at<uchar>(i, j) = (
@@ -70,9 +72,10 @@ void smooth_clean_code(Mat *gray_img, Mat *smooth_img) {
  * 
  * @param gray_img: grayscale image to be smoothed
  * @param smooth_img: Mat where to put the result
+ * @param nw number of threads to use (if 1, sequential version)
  * @return the smoothed image
  */
-void smooth(Mat *gray_img, Mat *smooth_img) {
+void smooth(Mat *gray_img, Mat *smooth_img, int nw) {
     int rows = gray_img->rows;
     int cols = gray_img->cols;
     int row_lower_offset, row_upper_offset, col_lower_offset, col_upper_offset;
@@ -80,6 +83,7 @@ void smooth(Mat *gray_img, Mat *smooth_img) {
     uint8_t n_neighbors;    // number of neighboring pixels (including central one)
 
     // for each pixel NOT on the border of the image
+    #pragma omp parallel for num_threads(nw)
     for (int i = 1; i < rows-1; i++) {
         for (int j = 1; j < cols-1; j++) {
             smooth_img->at<uchar>(i, j) = (
@@ -129,15 +133,18 @@ void smooth(Mat *gray_img, Mat *smooth_img) {
  * @param img2: another grayscale image
  * @param min_detect_diff: minimum absolute difference between 2 pixels to be counted as different
  * @param perc: percentage of different pixels to consider the images as differing from each other
+ * @param nw number of threads to use (if 1, sequential version)
  * @return true if the images differ for more than 'perc'% of their pixels, false otherwise
  */
-bool motion_detect(Mat *img1, Mat *img2, unsigned min_detect_diff, float perc) {
+bool motion_detect(Mat *img1, Mat *img2, unsigned min_detect_diff, float perc,
+                   int nw) {
     int rows = img1->rows;
     int cols = img1->cols;
 
     // count number of pixels that differ from the corresponding one in the other image
     // for more than a certain amount (min_detect_diff) (because of smoothing)
     unsigned n_different_pixels = 0;
+    #pragma omp parallel for reduction(+:n_different_pixels) num_threads(nw)
     for (int i = 0; i < rows; i++)
         for (int j = 0; j < cols; j++)
             if (abs(img1->at<uchar>(i, j) - img2->at<uchar>(i, j)) > min_detect_diff)

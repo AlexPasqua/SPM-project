@@ -1,5 +1,5 @@
 CXX=g++-10
-CXXFLAGS=`pkg-config --cflags opencv4` `pkg-config --libs opencv4` -pthread -std=c++17 -O3
+CXXFLAGS=`pkg-config --cflags opencv4` `pkg-config --libs opencv4` -pthread -fopenmp -std=c++17 -O3
 CPPFLAGS=-I ../include/
 
 OBJ=../obj/

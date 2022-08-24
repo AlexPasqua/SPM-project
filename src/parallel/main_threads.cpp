@@ -11,11 +11,24 @@
 
 using namespace std;
 
+
+// prints the usage of the program in case the arguments are wrong
+void print_usage(string prog_name) {
+    cout << "Usage: " << prog_name << " <video_path> <number of threads> "
+         << "[<n workers rgb2gray>] [<n workers smoothing] "
+         << "[<n workers motion_detect>]" << endl;
+    cout << "Arguments in square brackets are optional." << endl;
+    cout << "Default values are 1 for each argument." << endl;
+}
+
 int main(int argc, char** argv) {
-    if (argc != 3) {
-        cout << "Usage: " << argv[0] << " <video_path>" << " <number_of_threads>" << endl;
+    if (argc < 3 || argc > 6) {
+        print_usage(argv[0]);
         return -1;
     }
+    int nw_rgb2gray = argc > 3 && atoi(argv[3]) > 0 ? atoi(argv[3]) : 1;
+    int nw_smooth = argc > 4 && atoi(argv[4]) > 0 ? atoi(argv[4]) : 1;
+    int nw_motion_detect = argc > 5 && atoi(argv[5]) > 0 ? atoi(argv[5]) : 1;
 
     // timer for the overall completion time
     timer<std::chrono::milliseconds> tc("Overall completion time");
@@ -30,8 +43,8 @@ int main(int argc, char** argv) {
     int cols = background_rgb.cols;
     cv::Mat background_gray(rows, cols, CV_8UC1);
     cv::Mat background(rows, cols, CV_8UC1);
-    rgb2gray(&background_rgb, &background_gray);
-    smooth(&background_gray, &background);
+    rgb2gray(&background_rgb, &background_gray, nw_rgb2gray);
+    smooth(&background_gray, &background, nw_smooth);
 
     // shared queue for frames
     shared_queue<std::shared_ptr<cv::Mat>> q;
@@ -42,8 +55,9 @@ int main(int argc, char** argv) {
     // start threads
     std::vector<std::thread> threads;
     for (int i = 0; i < atoi(argv[2]); i++)
-        threads.push_back(std::thread(pick_and_comp, &q, i, &background, 0, 0.0,
-                                      std::ref(n_motion_frames)));
+        threads.push_back(std::thread(pick_and_comp, &q, i, &background,
+                                      nw_rgb2gray, nw_smooth, nw_motion_detect,
+                                      0, 0.0, std::ref(n_motion_frames)));
 
     // put frames in the queue for elaboration
     cv::Mat frame_rgb;
