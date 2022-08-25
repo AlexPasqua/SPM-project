@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <chrono>
+#include <string>
+
 
 /**
  * @brief object that takes the time upon creation and, once destroyed, prints

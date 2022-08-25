@@ -1,5 +1,6 @@
 #include <iostream>
 #include <atomic>
+#include <queue>
 #include "opencv2/opencv.hpp"
 
 #include "parallel/parallel_funcs.hpp"

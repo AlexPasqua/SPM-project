@@ -1,6 +1,8 @@
 #include <iostream>
 #include <thread>
 #include <atomic>
+#include <chrono>
+#include <queue>
 #include "opencv2/opencv.hpp"
 
 #include "parallel/parallel_funcs.hpp"
@@ -11,19 +13,9 @@
 
 using namespace std;
 
-
-// prints the usage of the program in case the arguments are wrong
-void print_usage(string prog_name) {
-    cout << "Usage: " << prog_name << " <video_path> <number of threads> "
-         << "[<n workers rgb2gray>] [<n workers smoothing] "
-         << "[<n workers motion_detect>]" << endl;
-    cout << "Arguments in square brackets are optional." << endl;
-    cout << "Default values are 1 for each argument." << endl;
-}
-
 int main(int argc, char** argv) {
     if (argc < 3 || argc > 6) {
-        print_usage(argv[0]);
+        print_usage_parallel_prog(argv[0]);
         return -1;
     }
     int nw_rgb2gray = argc > 3 && atoi(argv[3]) > 0 ? atoi(argv[3]) : 1;
@@ -57,7 +49,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < atoi(argv[2]); i++)
         threads.push_back(std::thread(pick_and_comp, &q, i, &background,
                                       nw_rgb2gray, nw_smooth, nw_motion_detect,
-                                      0, 0.0, std::ref(n_motion_frames)));
+                                      10, 0.05, std::ref(n_motion_frames)));
 
     // put frames in the queue for elaboration
     cv::Mat frame_rgb;

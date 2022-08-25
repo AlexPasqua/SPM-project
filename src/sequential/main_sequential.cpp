@@ -1,4 +1,6 @@
 #include <iostream>
+#include <chrono>
+
 #include "opencv2/opencv.hpp"
 
 #include "auxiliary/timer.hpp"

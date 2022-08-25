@@ -1,3 +1,5 @@
+#include <iostream>
+#include <string>
 #include "opencv2/opencv.hpp"
 #include "sequential/sequential_funcs.hpp"
 
@@ -136,8 +138,8 @@ void smooth(Mat *gray_img, Mat *smooth_img, int nw) {
  * @param nw number of threads to use (if 1, sequential version)
  * @return true if the images differ for more than 'perc'% of their pixels, false otherwise
  */
-bool motion_detect(Mat *img1, Mat *img2, unsigned min_detect_diff, float perc,
-                   int nw) {
+bool motion_detect(Mat *img1, Mat *img2, unsigned int min_detect_diff,
+                   float perc, int nw) {
     int rows = img1->rows;
     int cols = img1->cols;
 
@@ -161,4 +163,13 @@ bool motion_detect(Mat *img1, Mat *img2, unsigned min_detect_diff, float perc,
     if (perc_different_pixels > perc)
         return true;
     return false;
+}
+
+
+void print_usage_parallel_prog(const std::string prog_name) {
+    cout << "Usage: " << prog_name << " <video_path> <number of threads> "
+         << "[<n workers rgb2gray>] [<n workers smoothing] "
+         << "[<n workers motion_detect>]" << endl
+         << "Arguments in square brackets are optional." << endl
+         << "Default values are 1 for each argument." << endl;
 }
