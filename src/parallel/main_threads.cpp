@@ -52,8 +52,8 @@ int main(int argc, char** argv) {
                                       10, 0.05, std::ref(n_motion_frames)));
 
     // put frames in the queue for elaboration
-    cv::Mat frame_rgb;
     while (true) {
+        cv::Mat frame_rgb;
         cap >> frame_rgb;
         if (frame_rgb.empty())
             break;
