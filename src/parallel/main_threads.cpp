@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     smooth(&background_gray, &background, nw_smooth);
 
     // shared queue for frames
-    shared_queue<std::shared_ptr<cv::Mat>> q;
+    shared_queue<cv::Mat> q;
 
     // atomic variable to store the result
     std::atomic<int> n_motion_frames(0);
@@ -53,11 +53,11 @@ int main(int argc, char** argv) {
 
     // put frames in the queue for elaboration
     while (true) {
-        cv::Mat frame_rgb;
-        cap >> frame_rgb;
-        if (frame_rgb.empty())
+        cv::Mat *frame_rgb = new cv::Mat;
+        cap >> *frame_rgb;
+        if (frame_rgb->empty())
             break;
-        q.push(std::make_shared<cv::Mat>(frame_rgb));
+        q.push(frame_rgb);
     }
     q.no_more_pushes();
     cout << "Finished pushing frames" << endl;

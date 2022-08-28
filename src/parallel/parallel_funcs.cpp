@@ -19,7 +19,7 @@
  * @param perc percentage of different pixels to consider a frame different from background
  * @param n_motion_frames variable where to save the number of motion frames
  */
-void pick_and_comp(shared_queue<std::shared_ptr<cv::Mat>> *q, const int th_num,
+void pick_and_comp(shared_queue<cv::Mat> *q, const int th_num,
                    cv::Mat *background, int nw_rgb2gray, int nw_smooth,
                    int nw_motion_detect, int min_diff, float perc,
                    std::atomic<int>& n_motion_frames) {
@@ -32,7 +32,7 @@ void pick_and_comp(shared_queue<std::shared_ptr<cv::Mat>> *q, const int th_num,
     // continue looping until the queue is empty and the video is finished
     while (!(q->empty() && q->get_finished())) {
         // pop frame from the queue (synchronization included in pop())
-        std::shared_ptr<cv::Mat> frame_rgb = q->pop();
+        cv::Mat *frame_rgb = q->pop();
 
         // when the video is finished and the queue is empty, threads waiting
         // to pop a frame will return nullptr
@@ -40,7 +40,7 @@ void pick_and_comp(shared_queue<std::shared_ptr<cv::Mat>> *q, const int th_num,
             break;
         
         // run the main comp on the frame just popped
-        main_comp(background, frame_rgb.get(), &frame_gray, &frame, nw_rgb2gray,
+        main_comp(background, frame_rgb, &frame_gray, &frame, nw_rgb2gray,
                   nw_smooth, nw_motion_detect, min_diff, perc, n_motion_frames);
     }
     std::cout << "Thread " << th_num << " finished" << std::endl;

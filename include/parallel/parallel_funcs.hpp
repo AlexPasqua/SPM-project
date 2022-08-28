@@ -8,7 +8,7 @@
 #include "parallel/shared_queue.hpp"
 
 
-void pick_and_comp(shared_queue<std::shared_ptr<cv::Mat>> *q, const int th_num,
+void pick_and_comp(shared_queue<cv::Mat> *q, const int th_num,
                    cv::Mat *background, int nw_rgb2gray, int nw_smooth,
                    int nw_motion_detect, int min_diff, float perc,
                    std::atomic<int>& n_motion_frames);

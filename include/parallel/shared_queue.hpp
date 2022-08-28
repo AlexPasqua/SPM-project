@@ -12,7 +12,7 @@ class shared_queue {
 private:
     std::mutex m;
     std::condition_variable cond_var;
-    std::queue<T> q;
+    std::queue<T*> q;
     std::atomic<bool> finished;
 
 public:
@@ -33,7 +33,7 @@ public:
      * 
      * @param frame the pointer to the frame to be pushed in the queue
      */
-    void push(T frame) {
+    void push(T *frame) {
         std::unique_lock<std::mutex> lk(m);
         q.push(frame);
         cond_var.notify_all();
@@ -48,13 +48,13 @@ public:
      * 
      * @return the pointer to the frame popped from the queue
      */
-    T pop() {
+    T * pop() {
         std::unique_lock<std::mutex> lk(m);
         
         cond_var.wait(lk, [this](){ return !q.empty() || finished; });
         
         if (!q.empty()) {   // q can be empty if finished is true
-            T frame = q.front();
+            T *frame = q.front();
             q.pop();
             return frame;
         }
