@@ -7,19 +7,19 @@ BIN=bin/
 PAR_SRC=src/parallel/
 SEQ_SRC=src/sequential/
 
-$(BIN)main_ff.out: $(OBJ)main_ff.o $(OBJ)sequential_funcs.o
-	$(CXX) $(OBJ)main_ff.o $(OBJ)sequential_funcs.o $(CXXFLAGS) $(CPPFLAGS)  -o $(BIN)main_ff.out
+ff: $(OBJ)main_ff.o $(OBJ)sequential_funcs.o
+	$(CXX) $(OBJ)main_ff.o $(OBJ)sequential_funcs.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)main_ff.out
 
-$(BIN)main_threads.out: $(OBJ)main_threads.o $(OBJ)parallel_funcs.o $(OBJ)sequential_funcs.o
+threads: $(OBJ)main_threads.o $(OBJ)parallel_funcs.o $(OBJ)sequential_funcs.o
 	$(CXX) $(OBJ)main_threads.o $(OBJ)parallel_funcs.o $(OBJ)sequential_funcs.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)main_threads.out
 
-$(BIN)main_sequential.out: $(OBJ)main_sequential.o $(OBJ)sequential_funcs.o
+sequential: $(OBJ)main_sequential.o $(OBJ)sequential_funcs.o
 	$(CXX) $(OBJ)main_sequential.o $(OBJ)sequential_funcs.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)main_sequential.out
 
-$(BIN)seq_funcs_perf_eval.out: $(OBJ)sequential_funcs.o $(OBJ)seq_funcs_perf_eval.o
+seq_funcs_perf_eval: $(OBJ)sequential_funcs.o $(OBJ)seq_funcs_perf_eval.o
 	$(CXX) $(OBJ)sequential_funcs.o $(OBJ)seq_funcs_perf_eval.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)seq_funcs_perf_eval.out
 
-all: $(BIN)main_sequential.out $(BIN)seq_funcs_perf_eval.out $(BIN)main_threads.out $(BIN)main_ff.out
+all: sequential seq_funcs_perf_eval threads ff
 
 $(OBJ)main_ff.o: $(PAR_SRC)main_ff.cpp
 	$(CXX) -c $(PAR_SRC)main_ff.cpp $(CXXFLAGS) $(CPPFLAGS) -o $(OBJ)main_ff.o

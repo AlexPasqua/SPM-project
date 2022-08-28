@@ -2,6 +2,7 @@
 #include <ff/ff.hpp>
 #include <ff/farm.hpp>
 #include <chrono>
+#include <numeric>
 #include "opencv2/opencv.hpp"
 
 #include "sequential/sequential_funcs.hpp"
@@ -12,45 +13,46 @@
 using namespace std;
 using namespace ff;
 
-std::atomic<int> n_motion_frames(0);
-
 struct Emitter : ff_node_t<cv::Mat> {
     cv::VideoCapture cap;
-    cv::Mat *frame;
 
     Emitter(cv::VideoCapture cap) : cap(cap) {}
 
     cv::Mat *svc(cv::Mat *input) {
-        while (true) {
-            frame = new cv::Mat();
-            cap >> *frame;
-            if (frame->empty()) {
-                cap.release();
-                cout << "Finished pushing frames" << endl;
-                return EOS;
-            }
-            return frame;
+        cv::Mat *frame = new cv::Mat();
+        cap >> *frame;
+        if (frame->empty()) {
+            cap.release();
+            cout << "Finished pushing frames" << endl;
+            return EOS;
         }
+        return frame;
     }
 };
 
 struct Comp : ff_node_t<cv::Mat> {
-    int nw_rgb2gray, nw_smooth, nw_motion, rows, cols;
+    cv::Mat *background;
+    int rows, cols, nw_rgb2gray, nw_smooth, nw_motion;
     unsigned int min_diff;
     float perc;
+    int *n_motion_frames;
 
-    Comp(int nw_rgb2gray, int nw_smooth, int nw_motion, unsigned int min_diff, float perc) :
-        nw_rgb2gray(nw_rgb2gray), nw_smooth(nw_smooth), nw_motion(nw_motion), min_diff(min_diff), perc(perc) {}
+    Comp(cv::Mat *background, int nw_rgb2gray, int nw_smooth, int nw_motion,
+         unsigned int min_diff, float perc, int *n_motion_frames) :
+            background(background), nw_rgb2gray(nw_rgb2gray),
+            nw_smooth(nw_smooth), nw_motion(nw_motion), min_diff(min_diff),
+            perc(perc), n_motion_frames(n_motion_frames) {
+                rows = background->rows;
+                cols = background->cols;
+            }
 
     cv::Mat *svc(cv::Mat *frame_rgb) {
-        rows = frame_rgb->rows;
-        cols = frame_rgb->cols;
         cv::Mat frame_gray(rows, cols, CV_8UC1);
         cv::Mat frame_smooth(rows, cols, CV_8UC1);
         rgb2gray(frame_rgb, &frame_gray, nw_rgb2gray);
         smooth(&frame_gray, &frame_smooth, nw_smooth);
-        if (motion_detect(&frame_smooth, &frame_gray, min_diff, perc, nw_motion))
-            n_motion_frames++;
+        if (motion_detect(background, &frame_smooth, min_diff, perc, nw_motion))
+            *n_motion_frames += 1;
         return GO_ON;
     }
 };
@@ -79,11 +81,17 @@ int main(int argc, char **argv) {
     rgb2gray(&background_rgb, &background_gray, nw_rgb2gray);
     smooth(&background_gray, &background, nw_smooth);
 
+    // vector where to save the partial results of each worker
+    int nw = atoi(argv[2]);
+    std::vector<int> motion_frames_vec(nw, 0);
+
     // create workers
-    std::vector<unique_ptr<ff_node>> workers;
-    for (int i = 0; i < atoi(argv[2]); i++)
-        workers.push_back(make_unique<Comp>(nw_rgb2gray, nw_smooth, nw_motion,
-                                            10, 0.05));
+    std::vector<std::unique_ptr<ff_node>> workers;
+    for (int i = 0; i < nw; i++)
+        workers.push_back(make_unique<Comp>(
+            &background, nw_rgb2gray, nw_smooth, nw_motion, 10, 0.05,
+            &motion_frames_vec[i])
+        );
     
     // create farm
     ff_Farm<cv::Mat> farm(std::move(workers));
@@ -94,8 +102,10 @@ int main(int argc, char **argv) {
     // run
     farm.run_and_wait_end();
 
-    // print results
-    cout << "Number of motion frames: " << n_motion_frames << endl;
+    // collect and print results
+    int tot_motion_frames = std::accumulate(motion_frames_vec.begin(),
+                                            motion_frames_vec.end(), 0);
+    cout << "Total number of motion frames: " << tot_motion_frames << endl;
 
     return 0;
 }
