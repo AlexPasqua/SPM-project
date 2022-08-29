@@ -17,15 +17,22 @@
  * @param background the background image to be passed to "main_comp"
  * @param min_diff minimum difference between 2 pixels to be considered different
  * @param perc percentage of different pixels to consider a frame different from background
- * @param n_motion_frames variable where to save the number of motion frames
+ * @param n_motion_frames variable where to save the number of motion frame
+ * @param avg_frame_latency where to save the averace latency to process a frame
  */
 void pick_and_comp(shared_queue<cv::Mat> *q, const int th_num,
                    cv::Mat *background, int nw_rgb2gray, int nw_smooth,
                    int nw_motion_detect, int min_diff, float perc,
-                   std::atomic<int>& n_motion_frames) {
+                   std::atomic<int>& n_motion_frames, double &avg_frame_latency) {
+    // variables for performance measures
+    std::chrono::system_clock::time_point start, stop;
+    int n_frames = 0;
+    avg_frame_latency = 0.0;
     
     // continue looping until the queue is empty and the video is finished
     while (!(q->empty() && q->get_finished())) {
+        start = std::chrono::system_clock::now();
+
         // pop frame from the queue (synchronization included in pop())
         cv::Mat *frame_rgb = q->pop();
 
@@ -37,8 +44,16 @@ void pick_and_comp(shared_queue<cv::Mat> *q, const int th_num,
         // run the main comp on the frame just popped
         main_comp(background, frame_rgb, nw_rgb2gray, nw_smooth,
                   nw_motion_detect, min_diff, perc, n_motion_frames);
+        
+        stop = std::chrono::system_clock::now();
+        avg_frame_latency += std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
+        n_frames++;
     }
-    std::cout << "Thread " << th_num << " finished" << std::endl;
+
+    // compute average frame latency
+    avg_frame_latency /= double(n_frames);
+    std::cout << "Thread " << th_num << " finished\tAvg frame latency: "
+              << avg_frame_latency << " us" << std::endl;
 }
 
 

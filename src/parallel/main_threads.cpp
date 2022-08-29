@@ -2,6 +2,8 @@
 #include <thread>
 #include <atomic>
 #include <chrono>
+#include <vector>
+#include <numeric>
 #include <queue>
 #include "opencv2/opencv.hpp"
 
@@ -45,11 +47,14 @@ int main(int argc, char** argv) {
     std::atomic<int> n_motion_frames(0);
 
     // start threads
+    int n_threads = atoi(argv[2]);
     std::vector<std::thread> threads;
-    for (int i = 0; i < atoi(argv[2]); i++)
+    std::vector<double> frames_latencies(n_threads);
+    for (int i = 0; i < n_threads; i++)
         threads.push_back(std::thread(pick_and_comp, &q, i, background,
                                       nw_rgb2gray, nw_smooth, nw_motion_detect,
-                                      10, 0.05, std::ref(n_motion_frames)));
+                                      10, 0.05, std::ref(n_motion_frames),
+                                      std::ref(frames_latencies[i])));
 
     // put frames in the queue for elaboration
     while (true) {
@@ -69,5 +74,12 @@ int main(int argc, char** argv) {
     
     // print number of motion frames
     cout << "Number of frames with detected motion: " << n_motion_frames << endl;
+
+    // print average frame latency
+    double avg_frame_latency = std::accumulate(
+        frames_latencies.begin(), frames_latencies.end(), 0.0) /
+        double(frames_latencies.size());
+    cout << "Average frame latency: " << avg_frame_latency << " us" << endl;
+
     return 0;
 }
