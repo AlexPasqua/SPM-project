@@ -56,11 +56,14 @@ struct Comp : ff_node_t<FrameWithMotionFlag> {
             }
 
     FrameWithMotionFlag *svc(FrameWithMotionFlag *frame_rgb) {
-        frame_gray = rgb2gray(frame_rgb->frame, nw_rgb2gray);
-        smooth(frame_gray, frame_smooth, nw_smooth);
-        if (motion_detect(background, frame_smooth, min_diff, perc, nw_motion))
-            frame_rgb->motion = true;
-        return frame_rgb;
+        {
+            timer<std::chrono::milliseconds> lf("Latency single frame processing");
+            frame_gray = rgb2gray(frame_rgb->frame, nw_rgb2gray);
+            smooth(frame_gray, frame_smooth, nw_smooth);
+            if (motion_detect(background, frame_smooth, min_diff, perc, nw_motion))
+                frame_rgb->motion = true;
+            return frame_rgb;
+        }
     }
 };
 

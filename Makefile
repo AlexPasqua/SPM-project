@@ -7,8 +7,8 @@ BIN=bin/
 PAR_SRC=src/parallel/
 SEQ_SRC=src/sequential/
 
-ff: $(OBJ)main_ff.o $(OBJ)sequential_funcs.o
-	$(CXX) $(OBJ)main_ff.o $(OBJ)sequential_funcs.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)main_ff.out
+ff: $(OBJ)main_ff.o $(OBJ)sequential_funcs.o $(OBJ)parallel_funcs.o
+	$(CXX) $(OBJ)main_ff.o $(OBJ)sequential_funcs.o $(OBJ)parallel_funcs.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)main_ff.out
 
 threads: $(OBJ)main_threads.o $(OBJ)parallel_funcs.o $(OBJ)sequential_funcs.o
 	$(CXX) $(OBJ)main_threads.o $(OBJ)parallel_funcs.o $(OBJ)sequential_funcs.o $(CXXFLAGS) $(CPPFLAGS) -o $(BIN)main_threads.out
