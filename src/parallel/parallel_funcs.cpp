@@ -71,3 +71,17 @@ void main_comp(cv::Mat *background, cv::Mat *frame_rgb, int nw_rgb2gray,
     
     delete frame_rgb, frame_gray, frame;
 }
+
+
+/**
+ * @brief prints the usage of the program
+ * 
+ * @param prog_name name of the program
+ */
+void print_usage_parallel_prog(const std::string prog_name) {
+    std::cout << "Usage: " << prog_name << " <video_path> <number of threads> "
+              << "[<n workers rgb2gray>] [<n workers smoothing] "
+              << "[<n workers motion_detect>]" << std::endl
+              << "Arguments in square brackets are optional." << std::endl
+              << "Default values are 1 for each argument." << std::endl;
+}

@@ -7,7 +7,7 @@
 cv::Mat * rgb2gray(cv::Mat *rgb_img, int nw);
 
 // smoothing
-void smooth_clean_code(cv::Mat *gray_img, cv::Mat *smooth_img);
+void smooth_clean_code(cv::Mat *gray_img, cv::Mat *smooth_img, int nw);
 void smooth(cv::Mat * gray_img, cv::Mat *smooth_img, int nw);
 
 // motion detection

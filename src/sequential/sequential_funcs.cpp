@@ -39,14 +39,16 @@ cv::Mat * rgb2gray(Mat *rgb_img, int nw) {
  * 
  * @param gray_img: grayscale image to be smoothed
  * @param smooth_img: Mat where to put the result
+ * @param nw: number of threads to use (if 1, sequential version)
  * @return the smoothed image
  */
-void smooth_clean_code(Mat *gray_img, Mat *smooth_img) {
+void smooth_clean_code(Mat *gray_img, Mat *smooth_img, int nw) {
     int rows = gray_img->rows;
     int cols = gray_img->cols;
     int row_lower_offset, row_upper_offset, col_lower_offset, col_upper_offset;
     uchar sum;
     uint8_t n_neighbors;    // number of neighboring pixels (including central one)
+    #pragma omp parallel for num_threads(nw)
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             // find boundaries of the neighborhood
@@ -75,7 +77,7 @@ void smooth_clean_code(Mat *gray_img, Mat *smooth_img) {
  * 
  * @param gray_img: grayscale image to be smoothed
  * @param smooth_img: Mat where to put the result
- * @param nw number of threads to use (if 1, sequential version)
+ * @param nw number of workers to use (if 1, sequential version)
  * @return the smoothed image
  */
 void smooth(Mat *gray_img, Mat *smooth_img, int nw) {
@@ -136,7 +138,7 @@ void smooth(Mat *gray_img, Mat *smooth_img, int nw) {
  * @param img2: another grayscale image
  * @param min_detect_diff: minimum absolute difference between 2 pixels to be counted as different
  * @param perc: percentage of different pixels to consider the images as differing from each other
- * @param nw number of threads to use (if 1, sequential version)
+ * @param nw number of workers to use (if 1, sequential version)
  * @return true if the images differ for more than 'perc'% of their pixels, false otherwise
  */
 bool motion_detect(Mat *img1, Mat *img2, unsigned int min_detect_diff,
@@ -157,20 +159,7 @@ bool motion_detect(Mat *img1, Mat *img2, unsigned int min_detect_diff,
     // if more than a certain percentage of the pixels are different, then there is motion
     float perc_different_pixels = float(n_different_pixels) / float(rows * cols);
     
-    // debug prints
-    // cout << '\n' << n_different_pixels << '\t' << '\t' << perc_different_pixels
-    //      << '\t' << perc << '\n' << endl;
-    
     if (perc_different_pixels > perc)
         return true;
     return false;
-}
-
-
-void print_usage_parallel_prog(const std::string prog_name) {
-    cout << "Usage: " << prog_name << " <video_path> <number of threads> "
-         << "[<n workers rgb2gray>] [<n workers smoothing] "
-         << "[<n workers motion_detect>]" << endl
-         << "Arguments in square brackets are optional." << endl
-         << "Default values are 1 for each argument." << endl;
 }

@@ -1,5 +1,7 @@
 #include <iostream>
 #include <chrono>
+#include <vector>
+#include <numeric>
 
 #include "opencv2/opencv.hpp"
 
@@ -51,13 +53,18 @@ int main(int argc, char** argv) {
     Mat *frame_gray;
     Mat *frame = new Mat(rows, cols, CV_8UC1);
     bool motion_detected = false;
-    int n_frame = 1, n_motion_frames = 0;
+    int n_frames = 1, n_motion_frames = 0;
+    chrono::system_clock::time_point start, stop;
+    long cur_elapsed;
+    std::vector<long> elapsed_times;
     
     // process all frames one by one
     while (true) {
         cap >> *frame_rgb;
         if (frame_rgb->empty())
             break;
+
+        start = chrono::system_clock::now();
         
         // frame to grayscale
         frame_gray = rgb2gray(frame_rgb, nw_rgb2gray);
@@ -66,18 +73,27 @@ int main(int argc, char** argv) {
         smooth(frame_gray, frame, nw_smooth);
 
         // motion detection
-        if (motion_detect(background, frame, 10, 0.05, nw_motion_detect)) {
+        if (motion_detect(background, frame, 10, 0.05, nw_motion_detect))
             n_motion_frames++;
-            // cout << "Motion detected in frame " << n_frame << endl;
-        }
-        n_frame++;
+        
+        stop = chrono::system_clock::now();
+        cur_elapsed = chrono::duration_cast<chrono::milliseconds>(stop - start).count();
+        elapsed_times.push_back(cur_elapsed);
+
+        n_frames++;
     }
 
     // free the memory
     delete background, frame_rgb, frame_gray, frame;
     cap.release();
 
+    // compute the average time to process a frame
+    double avg_elapsed = std::reduce(
+        elapsed_times.begin(), elapsed_times.end(), 0) /
+        double(elapsed_times.size());
+
     cout << "Number of frames with detected motion: " << n_motion_frames << endl;
+    cout << "Average time per frame: " << avg_elapsed << " ms" << endl;
 
     return n_motion_frames;
 }

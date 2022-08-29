@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
             
             // measure latency of smoothing with function with cleaner code
             start = chrono::system_clock::now();
-            smooth_clean_code(frame_gray, frame);
+            smooth_clean_code(frame_gray, frame, nw_smooth);
             stop = chrono::system_clock::now();
             elapsed_musecs = chrono::duration_cast<chrono::microseconds>(stop - start).count();
             t_smooth_clean_code.push_back(elapsed_musecs);
