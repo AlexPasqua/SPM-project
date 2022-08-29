@@ -27,16 +27,16 @@ int main(int argc, char** argv) {
 
     // read video
     cv::VideoCapture cap(argv[1]);
+    int rows = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    int cols = cap.get(cv::CAP_PROP_FRAME_WIDTH);
 
     // take and process background image (i.e. frist frame)
-    cv::Mat background_rgb;
-    cap >> background_rgb;
-    int rows = background_rgb.rows;
-    int cols = background_rgb.cols;
-    cv::Mat background_gray(rows, cols, CV_8UC1);
-    cv::Mat background(rows, cols, CV_8UC1);
-    rgb2gray(&background_rgb, &background_gray, nw_rgb2gray);
-    smooth(&background_gray, &background, nw_smooth);
+    cv::Mat *background_rgb = new cv::Mat(rows, cols, CV_8UC3);
+    cap >> *background_rgb;
+    cv::Mat *background_gray = rgb2gray(background_rgb, nw_rgb2gray);
+    cv::Mat *background = new cv::Mat(rows, cols, CV_8UC1);
+    smooth(background_gray, background, nw_smooth);
+    delete background_rgb, background_gray;
 
     // shared queue for frames
     shared_queue<cv::Mat> q;
@@ -47,13 +47,13 @@ int main(int argc, char** argv) {
     // start threads
     std::vector<std::thread> threads;
     for (int i = 0; i < atoi(argv[2]); i++)
-        threads.push_back(std::thread(pick_and_comp, &q, i, &background,
+        threads.push_back(std::thread(pick_and_comp, &q, i, background,
                                       nw_rgb2gray, nw_smooth, nw_motion_detect,
                                       10, 0.05, std::ref(n_motion_frames)));
 
     // put frames in the queue for elaboration
     while (true) {
-        cv::Mat *frame_rgb = new cv::Mat;
+        cv::Mat *frame_rgb = new cv::Mat(rows, cols, CV_8UC3);
         cap >> *frame_rgb;
         if (frame_rgb->empty())
             break;

@@ -23,11 +23,6 @@ void pick_and_comp(shared_queue<cv::Mat> *q, const int th_num,
                    cv::Mat *background, int nw_rgb2gray, int nw_smooth,
                    int nw_motion_detect, int min_diff, float perc,
                    std::atomic<int>& n_motion_frames) {
-    // create matrices to store intermediate computations on the frame
-    int rows = background->rows;
-    int cols = background->cols;
-    cv::Mat frame_gray(rows, cols, CV_8UC1);
-    cv::Mat frame(rows, cols, CV_8UC1);
     
     // continue looping until the queue is empty and the video is finished
     while (!(q->empty() && q->get_finished())) {
@@ -40,8 +35,8 @@ void pick_and_comp(shared_queue<cv::Mat> *q, const int th_num,
             break;
         
         // run the main comp on the frame just popped
-        main_comp(background, frame_rgb, &frame_gray, &frame, nw_rgb2gray,
-                  nw_smooth, nw_motion_detect, min_diff, perc, n_motion_frames);
+        main_comp(background, frame_rgb, nw_rgb2gray, nw_smooth,
+                  nw_motion_detect, min_diff, perc, n_motion_frames);
     }
     std::cout << "Thread " << th_num << " finished" << std::endl;
 }
@@ -59,15 +54,20 @@ void pick_and_comp(shared_queue<cv::Mat> *q, const int th_num,
  * @param perc percentage of different pixels to consider a frame different from background
  * @param n_motion_frames variable where to save the number of motion frames
  */
-void main_comp(cv::Mat *background, cv::Mat *frame_rgb, cv::Mat *frame_gray,
-               cv::Mat *frame, int nw_rgb2gray, int nw_smooth,
-               int nw_motion_detect, int min_diff, float perc,
+void main_comp(cv::Mat *background, cv::Mat *frame_rgb, int nw_rgb2gray,
+               int nw_smooth, int nw_motion_detect, int min_diff, float perc,
                std::atomic<int>& n_motion_frames) {
+    
     // convert frame to grayscale
-    rgb2gray(frame_rgb, frame_gray, nw_rgb2gray);
+    cv::Mat *frame_gray = rgb2gray(frame_rgb, nw_rgb2gray);
+    
     // smooth frame
+    cv::Mat *frame = new cv::Mat(frame_gray->rows, frame_gray->cols, CV_8UC1);
     smooth(frame_gray, frame, nw_smooth);
+    
     // check if motion is detected
     if (motion_detect(background, frame, min_diff, perc, nw_motion_detect))
         n_motion_frames++;
+    
+    delete frame_rgb, frame_gray, frame;
 }

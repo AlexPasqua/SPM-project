@@ -36,32 +36,31 @@ int main(int argc, char** argv) {
     VideoCapture cap(argv[1]);
 
     // take background image (i.e. frist frame)
-    Mat background_rgb;
-    cap >> background_rgb;
-    
-    int rows = background_rgb.rows;
-    int cols = background_rgb.cols;
+    int rows = cap.get(CAP_PROP_FRAME_HEIGHT);
+    int cols = cap.get(CAP_PROP_FRAME_WIDTH);
+    Mat *background_rgb = new Mat(rows, cols, CV_8UC3);
+    cap >> *background_rgb;
     
     // convert background image to gray scale and smooth it
-    Mat *gray_background = new Mat(rows, cols, CV_8UC1);
+    Mat *background_gray = rgb2gray(background_rgb, nw_rgb2gray);
     Mat *background = new Mat(rows, cols, CV_8UC1);
-    rgb2gray(&background_rgb, gray_background, nw_rgb2gray);
-    smooth(gray_background, background, nw_smooth);
+    smooth(background_gray, background, nw_smooth);
+    delete background_rgb, background_gray;
 
-    Mat frame_rgb;
-    Mat *frame_gray = new Mat(rows, cols, CV_8UC1);
+    Mat *frame_rgb = new Mat(rows, cols, CV_8UC3);
+    Mat *frame_gray;
     Mat *frame = new Mat(rows, cols, CV_8UC1);
     bool motion_detected = false;
     int n_frame = 1, n_motion_frames = 0;
     
     // process all frames one by one
     while (true) {
-        cap >> frame_rgb;
-        if (frame_rgb.empty())
+        cap >> *frame_rgb;
+        if (frame_rgb->empty())
             break;
         
         // frame to grayscale
-        rgb2gray(&frame_rgb, frame_gray, nw_rgb2gray);
+        frame_gray = rgb2gray(frame_rgb, nw_rgb2gray);
 
         // smooth the grayscale frame
         smooth(frame_gray, frame, nw_smooth);
@@ -75,7 +74,7 @@ int main(int argc, char** argv) {
     }
 
     // free the memory
-    delete gray_background, background, frame_gray, frame;
+    delete background, frame_rgb, frame_gray, frame;
     cap.release();
 
     cout << "Number of frames with detected motion: " << n_motion_frames << endl;

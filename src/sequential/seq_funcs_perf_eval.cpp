@@ -39,19 +39,18 @@ int main(int argc, char** argv) {
 
         // read video
         VideoCapture cap(argv[1]);
+        int rows = cap.get(CAP_PROP_FRAME_HEIGHT);
+        int cols = cap.get(CAP_PROP_FRAME_WIDTH);
 
         // take background image (i.e. frist frame)
-        Mat background_rgb;
-        cap >> background_rgb;
-        
-        int rows = background_rgb.rows;
-        int cols = background_rgb.cols;
+        Mat *background_rgb = new Mat(rows, cols, CV_8UC3);
+        cap >> *background_rgb;
 
         // convert background image to gray scale and smooth it
-        Mat *gray_background = new Mat(rows, cols, CV_8UC1);
+        Mat *gray_background = rgb2gray(background_rgb, nw_rgb2gray);
         Mat *background = new Mat(rows, cols, CV_8UC1);
-        rgb2gray(&background_rgb, gray_background, nw_rgb2gray);
         smooth(gray_background, background, nw_smooth);
+        delete background_rgb, gray_background;
 
         // variables for performance evaluation
         chrono::system_clock::time_point start, stop;
@@ -59,27 +58,27 @@ int main(int argc, char** argv) {
         vector<long> t_rgb2gray, t_smooth_clean_code, t_smooth_efficient, t_motion_detect;
 
         // allocate matrices for storing the results
-        Mat *frame_gray = new Mat(rows, cols, CV_8UC1);
+        Mat *frame_rgb = new Mat(rows, cols, CV_8UC3);
+        Mat *frame_gray;
         Mat *frame = new Mat(rows, cols, CV_8UC1);
 
         // loop over the video
         int n_motion_frames = 0;
         while (true) {
-            Mat frame_rgb;
-            cap >> frame_rgb;
-            if (frame_rgb.empty())
+            cap >> *frame_rgb;
+            if (frame_rgb->empty())
                 break;
 
             // measure latency of conversion from RGB to grayscale
             start = chrono::system_clock::now();
-            rgb2gray(&frame_rgb, frame_gray, nw_rgb2gray);
+            frame_gray = rgb2gray(frame_rgb, nw_rgb2gray);
             stop = chrono::system_clock::now();
             elapsed_musecs = chrono::duration_cast<chrono::microseconds>(stop - start).count();
             t_rgb2gray.push_back(elapsed_musecs);
             
             // measure latency of smoothing with function with cleaner code
             start = chrono::system_clock::now();
-            // smooth_clean_code(frame_gray, frame);
+            smooth_clean_code(frame_gray, frame);
             stop = chrono::system_clock::now();
             elapsed_musecs = chrono::duration_cast<chrono::microseconds>(stop - start).count();
             t_smooth_clean_code.push_back(elapsed_musecs);
@@ -100,7 +99,7 @@ int main(int argc, char** argv) {
             t_motion_detect.push_back(elapsed_musecs);
         }
         // free the memory
-        delete gray_background, background, frame_gray, frame;
+        delete background, frame_rgb, frame_gray, frame;
 
         // compute average time for each stage for the current attempt
         double size = double(t_rgb2gray.size());    // all vectors have the same size

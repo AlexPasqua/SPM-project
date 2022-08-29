@@ -13,9 +13,8 @@ void pick_and_comp(shared_queue<cv::Mat> *q, const int th_num,
                    int nw_motion_detect, int min_diff, float perc,
                    std::atomic<int>& n_motion_frames);
 
-void main_comp(cv::Mat *background, cv::Mat *frame_rgb, cv::Mat *frame_gray,
-               cv::Mat *frame, int nw_rgb2gray, int nw_smooth,
-               int nw_motion_detect, int min_diff, float perc,
+void main_comp(cv::Mat *background, cv::Mat *frame_rgb, int nw_rgb2gray,
+               int nw_smooth, int nw_motion_detect, int min_diff, float perc,
                std::atomic<int>& n_motion_frames);
 
 void print_usage_parallel_prog(const std::string prog_name);

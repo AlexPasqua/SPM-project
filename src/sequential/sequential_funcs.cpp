@@ -8,27 +8,28 @@ using namespace std;
 using namespace cv;
 
 /**
- * @brief takes a RGB image (cv::Mat with 3 channels) and returns a grayscale
- * image (cv::Mat with 1 channel)
+ * @brief takes a RGB image (cv::Mat with 3 channels) and converts it into
+ * a grayscale image.
+ * 
+ * The grayscale 2D image is put in place of channel 0 of the 3D rgb image.
+ * The pointer to that channel 0 is returned.
  * 
  * @param rgb_img cv::Mat with 3 channels (R-G-B)
- * @param gray_img cv::Mat with 1 channel (grayscale) where to put the result
  * @param nw number of threads to use (if 1, sequential version)
- * @return grayscale version of 'rgb_img' (a cv::Mat with 1 channel)
+ * @return pointer to a grayscale version of 'rgb_img' (a cv::Mat with 1 channel)
  */
-void rgb2gray(Mat *rgb_img, Mat *gray_img, int nw) {
-    int rows = rgb_img->rows;
-    int cols = rgb_img->cols;
+cv::Mat * rgb2gray(Mat *rgb_img, int nw) {
+    cv::Mat *gray_img = &(rgb_img[0]);  // points to channel 0 of rgb_img
+    int rows = gray_img->rows;
+    int cols = gray_img->cols;
     #pragma omp parallel for num_threads(nw)
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            gray_img->at<uchar>(i, j) = (
-                rgb_img->at<Vec3b>(i, j)[0] + 
-                rgb_img->at<Vec3b>(i, j)[1] +
-                rgb_img->at<Vec3b>(i, j)[2]
-            ) / 3;
-        }
-    }
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            // note: gray_image->at(i,j) points to the same pixel as rgb_img->at(i,j)[0]
+            gray_img->at<uchar>(i, j) = (rgb_img->at<Vec3b>(i, j)[0] + 
+                                         rgb_img->at<Vec3b>(i, j)[1] +
+                                         rgb_img->at<Vec3b>(i, j)[2]) / 3;
+    return gray_img;
 }
 
 

@@ -13,46 +13,65 @@
 using namespace std;
 using namespace ff;
 
-struct Emitter : ff_node_t<cv::Mat> {
+struct FrameWithMotionFlag {
+    cv::Mat *frame;
+    bool motion;
+};
+
+struct Emitter : ff_node_t<FrameWithMotionFlag> {
     cv::VideoCapture cap;
+    int rows, cols;
 
-    Emitter(cv::VideoCapture cap) : cap(cap) {}
+    Emitter(cv::VideoCapture cap) : cap(cap) {
+        rows = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+        cols = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    }
 
-    cv::Mat *svc(cv::Mat *input) {
-        cv::Mat *frame = new cv::Mat();
+    FrameWithMotionFlag *svc(FrameWithMotionFlag *input) {
+        cv::Mat *frame = new cv::Mat(rows, cols, CV_8UC3);
         cap >> *frame;
         if (frame->empty()) {
             cap.release();
             cout << "Finished pushing frames" << endl;
             return EOS;
         }
-        return frame;
+        return new FrameWithMotionFlag{frame, false};
     }
 };
 
-struct Comp : ff_node_t<cv::Mat> {
-    cv::Mat *background;
-    int rows, cols, nw_rgb2gray, nw_smooth, nw_motion;
+struct Comp : ff_node_t<FrameWithMotionFlag> {
+    cv::Mat *background, *frame_gray, *frame_smooth;
+    int nw_rgb2gray, nw_smooth, nw_motion;
     unsigned int min_diff;
     float perc;
-    int *n_motion_frames;
 
     Comp(cv::Mat *background, int nw_rgb2gray, int nw_smooth, int nw_motion,
-         unsigned int min_diff, float perc, int *n_motion_frames) :
+         unsigned int min_diff, float perc) :
             background(background), nw_rgb2gray(nw_rgb2gray),
             nw_smooth(nw_smooth), nw_motion(nw_motion), min_diff(min_diff),
-            perc(perc), n_motion_frames(n_motion_frames) {
-                rows = background->rows;
-                cols = background->cols;
+            perc(perc) {
+                int rows = background->rows;
+                int cols = background->cols;
+                frame_smooth = new cv::Mat(rows, cols, CV_8UC1);
             }
 
-    cv::Mat *svc(cv::Mat *frame_rgb) {
-        cv::Mat frame_gray(rows, cols, CV_8UC1);
-        cv::Mat frame_smooth(rows, cols, CV_8UC1);
-        rgb2gray(frame_rgb, &frame_gray, nw_rgb2gray);
-        smooth(&frame_gray, &frame_smooth, nw_smooth);
-        if (motion_detect(background, &frame_smooth, min_diff, perc, nw_motion))
-            *n_motion_frames += 1;
+    FrameWithMotionFlag *svc(FrameWithMotionFlag *frame_rgb) {
+        frame_gray = rgb2gray(frame_rgb->frame, nw_rgb2gray);
+        smooth(frame_gray, frame_smooth, nw_smooth);
+        if (motion_detect(background, frame_smooth, min_diff, perc, nw_motion))
+            frame_rgb->motion = true;
+        return frame_rgb;
+    }
+};
+
+struct Collector : ff_minode_t<FrameWithMotionFlag> {
+    int n_motion_frames;
+
+    Collector() : n_motion_frames(0) {}
+
+    FrameWithMotionFlag *svc(FrameWithMotionFlag *frame_motion) {
+        if (frame_motion->motion)
+            n_motion_frames++;
         return GO_ON;
     }
 };
@@ -72,40 +91,34 @@ int main(int argc, char **argv) {
 
     // process background
     cv::VideoCapture cap(argv[1]);
-    cv::Mat background_rgb;
-    cap >> background_rgb;
-    int rows = background_rgb.rows;
-    int cols = background_rgb.cols;
-    cv::Mat background_gray(rows, cols, CV_8UC1);
-    cv::Mat background(rows, cols, CV_8UC1);
-    rgb2gray(&background_rgb, &background_gray, nw_rgb2gray);
-    smooth(&background_gray, &background, nw_smooth);
-
-    // vector where to save the partial results of each worker
-    int nw = atoi(argv[2]);
-    std::vector<int> motion_frames_vec(nw, 0);
+    int rows = cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    int cols = cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    cv::Mat *background_rgb = new cv::Mat(rows, cols, CV_8UC3);
+    cap >> *background_rgb;
+    cv::Mat *background_gray = rgb2gray(background_rgb, nw_rgb2gray);
+    cv::Mat *background = new cv::Mat(rows, cols, CV_8UC1);
+    smooth(background_gray, background, nw_smooth);
+    delete background_rgb, background_gray;
 
     // create workers
     std::vector<std::unique_ptr<ff_node>> workers;
-    for (int i = 0; i < nw; i++)
+    for (int i = 0; i < atoi(argv[2]); i++)
         workers.push_back(make_unique<Comp>(
-            &background, nw_rgb2gray, nw_smooth, nw_motion, 10, 0.05,
-            &motion_frames_vec[i])
+            background, nw_rgb2gray, nw_smooth, nw_motion, 10, 0.05)
         );
     
     // create farm
-    ff_Farm<cv::Mat> farm(std::move(workers));
+    ff_Farm<FrameWithMotionFlag> farm(std::move(workers));
     Emitter emitter(cap);
+    Collector collector;    // will contain the result
     farm.add_emitter(emitter);
-    farm.remove_collector();
+    farm.add_collector(collector);
 
     // run
     farm.run_and_wait_end();
 
-    // collect and print results
-    int tot_motion_frames = std::accumulate(motion_frames_vec.begin(),
-                                            motion_frames_vec.end(), 0);
-    cout << "Total number of motion frames: " << tot_motion_frames << endl;
+    // print results    
+    cout << "Total number of motion frames: " << collector.n_motion_frames << endl;
 
     return 0;
 }
