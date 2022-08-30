@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
     int n_frames = 1, n_motion_frames = 0;
     chrono::system_clock::time_point start, stop;
     long cur_elapsed;
-    std::vector<long> elapsed_times;
+    double avg_frame_latency = 0.0;
     
     // process all frames one by one
     while (true) {
@@ -78,8 +78,7 @@ int main(int argc, char** argv) {
         
         stop = chrono::system_clock::now();
         cur_elapsed = chrono::duration_cast<chrono::milliseconds>(stop - start).count();
-        elapsed_times.push_back(cur_elapsed);
-
+        avg_frame_latency += cur_elapsed;
         n_frames++;
     }
 
@@ -88,12 +87,10 @@ int main(int argc, char** argv) {
     cap.release();
 
     // compute the average time to process a frame
-    double avg_elapsed = std::reduce(
-        elapsed_times.begin(), elapsed_times.end(), 0) /
-        double(elapsed_times.size());
+    avg_frame_latency /= double(n_frames);
 
     cout << "Number of frames with detected motion: " << n_motion_frames << endl;
-    cout << "Average time per frame: " << avg_elapsed << " ms" << endl;
+    cout << "Average latency per frame: " << avg_frame_latency << " ms" << endl;
 
     return n_motion_frames;
 }
