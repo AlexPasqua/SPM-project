@@ -41,40 +41,59 @@ struct Emitter : ff_node_t<FrameWithMotionFlag> {
 
 struct Comp : ff_node_t<FrameWithMotionFlag> {
     cv::Mat *background, *frame_gray, *frame_smooth;
-    int nw_rgb2gray, nw_smooth, nw_motion;
+    int nw_rgb2gray, nw_smooth, nw_motion, n_frames;
     unsigned int min_diff;
     float perc;
+    double avg_latency;
+    std::chrono::system_clock::time_point start, stop;
 
     Comp(cv::Mat *background, int nw_rgb2gray, int nw_smooth, int nw_motion,
          unsigned int min_diff, float perc) :
             background(background), nw_rgb2gray(nw_rgb2gray),
             nw_smooth(nw_smooth), nw_motion(nw_motion), min_diff(min_diff),
-            perc(perc) {
+            perc(perc), avg_latency(0.0), n_frames(0) {
                 int rows = background->rows;
                 int cols = background->cols;
                 frame_smooth = new cv::Mat(rows, cols, CV_8UC1);
             }
 
     FrameWithMotionFlag *svc(FrameWithMotionFlag *frame_rgb) {
-        {
-            timer<std::chrono::milliseconds> lf("Latency single frame processing");
-            frame_gray = rgb2gray(frame_rgb->frame, nw_rgb2gray);
-            smooth(frame_gray, frame_smooth, nw_smooth);
-            if (motion_detect(background, frame_smooth, min_diff, perc, nw_motion))
-                frame_rgb->motion = true;
-            return frame_rgb;
-        }
+        start = std::chrono::system_clock::now();
+        frame_gray = rgb2gray(frame_rgb->frame, nw_rgb2gray);
+        smooth(frame_gray, frame_smooth, nw_smooth);
+        if (motion_detect(background, frame_smooth, min_diff, perc, nw_motion))
+            frame_rgb->motion = true;
+        stop = std::chrono::system_clock::now();
+        avg_latency += std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
+        n_frames++;
+        return frame_rgb;
     }
 };
 
 struct Collector : ff_minode_t<FrameWithMotionFlag> {
     int n_motion_frames;
+    std::chrono::system_clock::time_point start, stop;
+    double avg_service_time;
+    int n_frames;
+    bool first;
 
-    Collector() : n_motion_frames(0) {}
+    Collector() : n_motion_frames(0), n_frames(0), first(true) {
+        start = std::chrono::system_clock::now();
+    }
 
     FrameWithMotionFlag *svc(FrameWithMotionFlag *frame_motion) {
+        stop = std::chrono::system_clock::now();
         if (frame_motion->motion)
             n_motion_frames++;
+        avg_service_time += std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
+        if (first) {
+            // discard first value because the chrono starts when the object is created
+            // and not when the first frame is processed
+            first = false;
+            avg_service_time = 0;
+        }
+        n_frames++;
+        start = std::chrono::system_clock::now();
         return GO_ON;
     }
 };
@@ -120,8 +139,20 @@ int main(int argc, char **argv) {
     // run
     farm.run_and_wait_end();
 
+    double avg_latency = 0.0;
+    int n = 0;
+    for(auto &worker : farm.getWorkers()) {
+        if (dynamic_cast<Comp*>(worker) != nullptr) {
+            avg_latency += dynamic_cast<Comp*>(worker)->avg_latency;
+            n += dynamic_cast<Comp*>(worker)->n_frames;
+        }
+    }
+    avg_latency /= double(n);
+
     // print results    
     cout << "Total number of motion frames: " << collector.n_motion_frames << endl;
+    cout << "Average latency per frame: " << avg_latency << " ms" << endl;
+    cout << "Average service time: " << collector.avg_service_time / double(collector.n_frames) << " ms" << endl;
 
     return 0;
 }

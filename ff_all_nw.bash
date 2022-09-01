@@ -1,0 +1,1 @@
+ for ((nw=24; nw<=32; nw++)); do echo "Workers: $nw"; for((i=1; i<=10; i++)); do ./bin/main_ff.out videos/ciabatta_che_cade.mp4 $nw | grep -e "Average latency per frame" -e "Average service time" -e "Overall completion time"; done; echo ""; done
