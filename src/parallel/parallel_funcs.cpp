@@ -1,5 +1,6 @@
 #include <iostream>
 #include <atomic>
+#include <chrono>
 #include <queue>
 #include "opencv2/opencv.hpp"
 
@@ -23,11 +24,15 @@
 void pick_and_comp(shared_queue<cv::Mat> *q, const int th_num,
                    cv::Mat *background, int nw_rgb2gray, int nw_smooth,
                    int nw_motion_detect, int min_diff, float perc,
-                   std::atomic<int>& n_motion_frames, double &avg_frame_latency) {
+                   std::atomic<int>& n_motion_frames, double &avg_frame_latency,
+                    double &avg_ts,
+                    int &first, int &n_ts) {
     // variables for performance measures
     std::chrono::system_clock::time_point start, stop;
     int n_frames = 0;
     avg_frame_latency = 0.0;
+    std::chrono::system_clock::time_point ts_start = std::chrono::system_clock::now();
+    std::chrono::system_clock::time_point ts_stop;
     
     // continue looping until the queue is empty and the video is finished
     while (!(q->empty() && q->get_finished())) {
@@ -43,7 +48,8 @@ void pick_and_comp(shared_queue<cv::Mat> *q, const int th_num,
         
         // run the main comp on the frame just popped
         main_comp(background, frame_rgb, nw_rgb2gray, nw_smooth,
-                  nw_motion_detect, min_diff, perc, n_motion_frames);
+                  nw_motion_detect, min_diff, perc, n_motion_frames,
+                  ts_start, ts_stop, avg_ts, first, n_ts);
         
         stop = std::chrono::system_clock::now();
         avg_frame_latency += std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count();
@@ -71,7 +77,11 @@ void pick_and_comp(shared_queue<cv::Mat> *q, const int th_num,
  */
 void main_comp(cv::Mat *background, cv::Mat *frame_rgb, int nw_rgb2gray,
                int nw_smooth, int nw_motion_detect, int min_diff, float perc,
-               std::atomic<int>& n_motion_frames) {
+               std::atomic<int>& n_motion_frames,
+               std::chrono::system_clock::time_point &ts_start,
+               std::chrono::system_clock::time_point &ts_stop,
+               double &avg_ts,
+               int &first, int &n_ts) {
     
     // convert frame to grayscale
     cv::Mat *frame_gray = rgb2gray(frame_rgb, nw_rgb2gray);
@@ -81,8 +91,19 @@ void main_comp(cv::Mat *background, cv::Mat *frame_rgb, int nw_rgb2gray,
     smooth(frame_gray, frame, nw_smooth);
     
     // check if motion is detected
-    if (motion_detect(background, frame, min_diff, perc, nw_motion_detect))
+    if (motion_detect(background, frame, min_diff, perc, nw_motion_detect)) {
+        ts_stop = std::chrono::system_clock::now();
         n_motion_frames++;
+        avg_ts += std::chrono::duration_cast<std::chrono::milliseconds>(ts_stop - ts_start).count();
+        if (first) {
+            first = 0;
+            avg_ts = 0.0;
+        }
+        else {
+            n_ts++;
+        }
+        ts_start = std::chrono::system_clock::now();
+    }
     
     delete frame_rgb, frame_gray, frame;
 }

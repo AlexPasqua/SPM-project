@@ -92,7 +92,9 @@ struct Collector : ff_minode_t<FrameWithMotionFlag> {
             first = false;
             avg_service_time = 0;
         }
-        n_frames++;
+        else {
+            n_frames++;
+        }
         start = std::chrono::system_clock::now();
         return GO_ON;
     }

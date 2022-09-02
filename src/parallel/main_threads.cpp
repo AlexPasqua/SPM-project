@@ -50,11 +50,20 @@ int main(int argc, char** argv) {
     int n_threads = atoi(argv[2]);
     std::vector<std::thread> threads;
     std::vector<double> frames_latencies(n_threads);
+    // std::vector<std::chrono::system_clock::time_point> ts_starts(n_threads);
+    // std::vector<std::chrono::system_clock::time_point> ts_stops(n_threads);
+    std::vector<double> avg_ts(n_threads);
+    std::vector<int> first(n_threads, 1);
+    std::vector<int> n_ts(n_threads, 0);
     for (int i = 0; i < n_threads; i++)
         threads.push_back(std::thread(pick_and_comp, &q, i, background,
                                       nw_rgb2gray, nw_smooth, nw_motion_detect,
                                       10, 0.05, std::ref(n_motion_frames),
-                                      std::ref(frames_latencies[i])));
+                                      std::ref(frames_latencies[i]),
+                                    //   std::ref(ts_starts[i]), std::ref(ts_stops[i]),
+                                      std::ref(avg_ts[i]),
+                                      std::ref(first[i]),
+                                      std::ref(n_ts[i])));     
 
     // put frames in the queue for elaboration
     while (true) {
@@ -79,7 +88,14 @@ int main(int argc, char** argv) {
     double avg_frame_latency = std::accumulate(
         frames_latencies.begin(), frames_latencies.end(), 0.0) /
         double(frames_latencies.size());
-    cout << "Average frame latency: " << avg_frame_latency << " us" << endl;
+    cout << "Average latency per frame: " << avg_frame_latency << " us" << endl;
+
+    for (int i = 0; i < avg_ts.size(); i++)
+        avg_ts[i] /= double(n_ts[i]);
+    double avg_service_time = std::accumulate(
+        avg_ts.begin(), avg_ts.end(), 0.0) /
+        double(avg_ts.size());
+    cout << "Average service time: " << avg_service_time << " ms" << endl;
 
     return 0;
 }
