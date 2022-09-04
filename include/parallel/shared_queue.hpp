@@ -36,7 +36,7 @@ public:
     void push(T *frame) {
         std::unique_lock<std::mutex> lk(m);
         q.push(frame);
-        cond_var.notify_all();
+        cond_var.notify_one();
     }
 
     /**
