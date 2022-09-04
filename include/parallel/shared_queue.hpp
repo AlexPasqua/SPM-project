@@ -28,8 +28,8 @@ public:
     /**
      * @brief push a frame in the queue assuring access synchronization
      * 
-     * Creates a lock guard, pushes the frame into the queue and releases the lock
-     * notifying all waiting threads through a condition variable.
+     * Creates a "unique_lock", pushes the frame into the queue and releases
+     * the lock notifying a waiting thread through a condition variable.
      * 
      * @param frame the pointer to the frame to be pushed in the queue
      */
@@ -42,11 +42,11 @@ public:
     /**
      * @brief pop a frame from the queue assuring access synchronization
      * 
-     * Creates a lock guard, uses a condition variable to check whether the queue
-     * is empty and in case it waits. If the queue isn't empty, it pops a frame
-     * from the queue and returns it.
+     * Creates a "unique_lock", through a condition variable it waits while
+     * the queue is empty or the main thread finished pushing frames.
+     * Then, if the queue isn't empty, it pops a frame and returns it.
      * 
-     * @return the pointer to the frame popped from the queue
+     * @return the pointer to the frame popped from the queue (or nullptr)
      */
     T * pop() {
         std::unique_lock<std::mutex> lk(m);

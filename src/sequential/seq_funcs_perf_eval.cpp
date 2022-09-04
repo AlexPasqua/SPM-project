@@ -12,7 +12,7 @@ using namespace cv;
 
 // prints the usage of the program in case the arguments are wrong
 void print_usage(string prog_name) {
-    cout << "Usage: " << prog_name << " <video_path> " << "<number of attempts >"
+    cout << "Usage: " << prog_name << " <video_path> " << "<number of attempts>"
          << "[<n workers rgb2gray>] [<n workers smoothing] "
          << "[<n workers motion_detect>]" << endl;
     cout << "Arguments in square brackets are optional." << endl;

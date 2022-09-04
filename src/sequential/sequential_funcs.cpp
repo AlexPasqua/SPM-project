@@ -35,11 +35,11 @@ cv::Mat * rgb2gray(Mat *rgb_img, int nw) {
 
 /**
  * @brief smooths a grayscale image.
+ * 
  * Version of the function with the cleanest code
  * 
  * @param gray_img: grayscale image to be smoothed
  * @param smooth_img: Mat where to put the result
- * @return the smoothed image
  */
 void smooth_clean_code(Mat *gray_img, Mat *smooth_img) {
     int rows = gray_img->rows;
@@ -70,13 +70,13 @@ void smooth_clean_code(Mat *gray_img, Mat *smooth_img) {
 
 /**
  * @brief smooths a grayscale image.
+ * 
  * A more efficient version of the function, since it removes 2 nested cycles
  * for the great majority of the pixels.
  * 
  * @param gray_img: grayscale image to be smoothed
  * @param smooth_img: Mat where to put the result
  * @param nw number of threads to use (if 1, sequential version)
- * @return the smoothed image
  */
 void smooth(Mat *gray_img, Mat *smooth_img, int nw) {
     int rows = gray_img->rows;

@@ -69,8 +69,8 @@ struct Collector : ff_minode_t<FrameWithMotionFlag> {
 
     Collector() : n_motion_frames(0) {}
 
-    FrameWithMotionFlag *svc(FrameWithMotionFlag *frame_motion) {
-        if (frame_motion->motion)
+    FrameWithMotionFlag *svc(FrameWithMotionFlag *frame) {
+        if (frame->motion)
             n_motion_frames++;
         return GO_ON;
     }

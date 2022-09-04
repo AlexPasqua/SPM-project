@@ -15,6 +15,9 @@
  * @param q pointer to the shared queue
  * @param th_num number of the current thread (for logging purposes)
  * @param background the background image to be passed to "main_comp"
+ * @param nw_rgb2gray number of threads to use for the rgb2gray oepration
+ * @param nw_smooth number of threads to use for the smoothing operation
+ * @param nw_motion_detect number of threads to use for the motion detection
  * @param min_diff minimum difference between 2 pixels to be considered different
  * @param perc percentage of different pixels to consider a frame different from background
  * @param n_motion_frames variable where to save the number of motion frames
@@ -48,8 +51,11 @@ void pick_and_comp(shared_queue<cv::Mat> *q, const int th_num,
  * For each frame, it turns it into grayscale, runs smoothing and check
  * if some motion is detected in the frame w.r.t. the background.
  * 
- * @param q pointer to the shared queue
- * @param background the background image
+ * @param background pointer to the background image
+ * @param frame_rgb pointer to the frame to be processed
+ * @param nw_rgb2gray number of threads to use for the rgb2gray oepration
+ * @param nw_smooth number of threads to use for the smoothing operation
+ * @param nw_motion_detect number of threads to use for the motion detection
  * @param min_diff minimum difference between 2 pixels to be considered different
  * @param perc percentage of different pixels to consider a frame different from background
  * @param n_motion_frames variable where to save the number of motion frames
