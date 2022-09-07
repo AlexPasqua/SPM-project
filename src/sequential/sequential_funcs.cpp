@@ -110,13 +110,32 @@ void smooth(Mat *gray_img, Mat *smooth_img, int nw) {
         // compute row offsets
         row_lower_offset = i > 0 ? -1 : 0;
         row_upper_offset = i < rows - 1 ? 1 : 0;
-        for (auto &j : col_borders_idxs) {
-            // compute column offsets and number of neighboring pixels
+        for (int j = 0; j < cols; j++) {
+            // compute col offsets
             col_lower_offset = j > 0 ? -1 : 0;
             col_upper_offset = j < cols - 1 ? 1 : 0;
             n_neighbors = (row_upper_offset - row_lower_offset + 1) *
                           (col_upper_offset - col_lower_offset + 1);
+
+            sum = 0;
+            for (int r = row_lower_offset; r <= row_upper_offset; r++)
+                for (int c = col_lower_offset; c <= col_upper_offset; c++)
+                    sum += gray_img->at<uchar>(i + r, j + c);
             
+            smooth_img->at<uchar>(i, j) = sum / n_neighbors;
+        }
+    }
+    for (auto &j : col_borders_idxs) {
+        // compute col offsets
+        col_lower_offset = j > 0 ? -1 : 0;
+        col_upper_offset = j < cols - 1 ? 1 : 0;
+        for (int i = 0; i < rows; i++) {
+            // compute row offsets
+            row_lower_offset = i > 0 ? -1 : 0;
+            row_upper_offset = i < rows - 1 ? 1 : 0;
+            n_neighbors = (row_upper_offset - row_lower_offset + 1) *
+                          (col_upper_offset - col_lower_offset + 1);
+
             sum = 0;
             for (int r = row_lower_offset; r <= row_upper_offset; r++)
                 for (int c = col_lower_offset; c <= col_upper_offset; c++)
